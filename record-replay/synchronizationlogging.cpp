@@ -2720,7 +2720,8 @@ TURN_CHECK_P(mmap_turn_check)
     ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, length) &&
     ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, prot) &&
     ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, flags) &&
-    ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, fd) &&
+    (mmap_ignore_fd ||
+     ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, fd)) &&
     ARE_FIELDS_EQUAL_PTR(e1, e2, mmap, offset);
 }
 
