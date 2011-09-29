@@ -431,6 +431,9 @@ size_t dmtcp::SynchronizationLog::getEntryHeaderAtOffset(log_entry_t& entry,
   buffer += sizeof(GET_COMMON(entry, my_errno));
   memcpy(&GET_COMMON(entry, retval), buffer, sizeof(GET_COMMON(entry, retval)));
   buffer += sizeof(GET_COMMON(entry, retval));
+  memcpy(&GET_COMMON(entry, return_addr), buffer, sizeof(GET_COMMON(entry,
+                                                                    return_addr)));
+  buffer += sizeof(GET_COMMON(entry, return_addr));
 
   JASSERT((buffer - &_log[index]) == log_event_common_size)
     (index) (log_event_common_size) (buffer);
@@ -465,6 +468,9 @@ void dmtcp::SynchronizationLog::writeEntryHeaderAtOffset(const log_entry_t& entr
   buffer += sizeof(GET_COMMON(entry, my_errno));
   memcpy(buffer, &GET_COMMON(entry, retval), sizeof(GET_COMMON(entry, retval)));
   buffer += sizeof(GET_COMMON(entry, retval));
+  memcpy(buffer, &GET_COMMON(entry, return_addr), sizeof(GET_COMMON(entry,
+                                                                    return_addr)));
+  buffer += sizeof(GET_COMMON(entry, return_addr));
 
   JASSERT((buffer - &_log[index]) == log_event_common_size)
     (index) (log_event_common_size) (buffer);

@@ -250,6 +250,7 @@ LIB_PRIVATE extern __thread int mmap_no_sync;
   do {                                                              \
     SET_COMMON2(my_entry, my_errno, errno);                         \
     SET_COMMON2(my_entry, isOptional, isOptionalEvent);             \
+    SET_COMMON2(my_entry, return_addr, GET_RETURN_ADDRESS());       \
     addNextLogEntry(my_entry);                                      \
     errno = GET_COMMON(my_entry, my_errno);                         \
   } while (0)
@@ -272,6 +273,7 @@ LIB_PRIVATE extern __thread int mmap_no_sync;
   do {                                                              \
     real_func(__VA_ARGS__);                                         \
     SET_COMMON2(my_entry, my_errno, errno);                         \
+    SET_COMMON2(my_entry, return_addr, GET_RETURN_ADDRESS());       \
     addNextLogEntry(my_entry);                                      \
     errno = GET_COMMON(my_entry, my_errno);                         \
   } while (0)
@@ -1408,6 +1410,7 @@ typedef struct {
   clone_id_t clone_id;
   int my_errno;
   void* retval;
+  void* return_addr;
 } log_entry_header_t;
 
 #define DECL_LOG_EVENT_TYPE(ret_type, x, ...) \
@@ -1433,7 +1436,8 @@ typedef struct {
    sizeof(log_off_t)     +  /* log_offset */                           \
    sizeof(clone_id_t)    +  /* clone_id */                             \
    sizeof(int)           +  /* my_errno */                             \
-   sizeof(void *))          /* retval */
+   sizeof(void *)        +  /* retval */                               \
+   sizeof(void *))          /* return address */
 
 
 #define GET_FIELD(entry, event, field) \
