@@ -353,6 +353,7 @@ void dmtcp::SynchronizationLog::updateEntry(const log_entry_t& entry)
 	  GET_COMMON(entry, event) == malloc_event ||
 	  GET_COMMON(entry, event) == libc_memalign_event ||
 	  GET_COMMON(entry, event) == calloc_event ||
+	  GET_COMMON(entry, event) == free_event ||
 	  GET_COMMON(entry, event) == realloc_event);
 
 #ifdef DEBUG

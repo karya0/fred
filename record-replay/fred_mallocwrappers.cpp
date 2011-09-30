@@ -291,13 +291,9 @@ extern "C" void *fred_calloc(size_t nmemb, size_t size)
     mem_allocated_for_initializing_wrappers = true;
     return (void*) wrapper_init_buf;
   }
-  void *ret_addr = GET_RETURN_ADDRESS();
-  if ((!shouldSynchronize(ret_addr) && !log_all_allocs) ||
-      jalib::Filesystem::GetProgramName() == "gdb") {
-    void *retval = _real_calloc (nmemb, size);
-    return retval;
-  }
+  SET_IN_MALLOC_WRAPPER();
   MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, calloc, nmemb, size);
+  UNSET_IN_MALLOC_WRAPPER();
   return retval;
 }
 
@@ -306,20 +302,19 @@ extern "C" void *fred_malloc(size_t size)
   if (fred_wrappers_initializing) {
     return calloc(1, size);
   }
+  SET_IN_MALLOC_WRAPPER();
   MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, malloc, size);
+  UNSET_IN_MALLOC_WRAPPER();
   return retval;
 }
 
-extern "C" void *__libc_memalign(size_t boundary, size_t size)
+extern "C" void *fred_libc_memalign(size_t boundary, size_t size)
 {
   JASSERT (my_clone_id != 0);
+  SET_IN_MALLOC_WRAPPER();
   MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, libc_memalign, boundary, size);
+  UNSET_IN_MALLOC_WRAPPER();
   return retval;
-}
-
-extern "C" void *valloc(size_t size)
-{
-  return __libc_memalign(sysconf(_SC_PAGESIZE), size);
 }
 
 // FIXME:  Add wrapper for alloca(), posix_memalign(), etc.,
@@ -331,11 +326,13 @@ extern "C" void fred_free(void *ptr)
     JASSERT(ptr == wrapper_init_buf);
     return;
   }
+  SET_IN_MALLOC_WRAPPER();
   void *return_addr = GET_RETURN_ADDRESS();
   if ((!shouldSynchronize(return_addr) && !log_all_allocs) ||
       ptr == NULL || isProcessGDB()) {
     _real_pthread_mutex_lock(&allocation_lock);
     _real_free(ptr);
+    UNSET_IN_MALLOC_WRAPPER();                                              \
     _real_pthread_mutex_unlock(&allocation_lock);
     return;
   }
@@ -345,17 +342,27 @@ extern "C" void fred_free(void *ptr)
 
   if (SYNC_IS_REPLAY) {
     waitForTurn(&my_entry, &free_turn_check);
+    WRAPPER_REPLAY_END(free);
     _real_pthread_mutex_lock(&allocation_lock);
     _real_free(ptr);
     _real_pthread_mutex_unlock(&allocation_lock);
-    WRAPPER_REPLAY_END(free);
   } else if (SYNC_IS_RECORD) {
     // Not restart; we should be logging.
     _real_pthread_mutex_lock(&allocation_lock);
-    _real_free(ptr);
     WRAPPER_LOG_WRITE_ENTRY(my_entry);
+    _real_free(ptr);
+    WRAPPER_LOG_UPDATE_ENTRY(my_entry);
     _real_pthread_mutex_unlock(&allocation_lock);
   }
+  UNSET_IN_MALLOC_WRAPPER();
+}
+
+extern "C" void *fred_realloc(void *ptr, size_t size)
+{
+  SET_IN_MALLOC_WRAPPER();
+  MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, realloc, ptr, size);
+  UNSET_IN_MALLOC_WRAPPER();
+  return retval;
 }
 
 extern "C" void *calloc(size_t nmemb, size_t size) {
@@ -367,14 +374,19 @@ extern "C" void *malloc(size_t size) {
 extern "C" void free(void *ptr) {
   fred_free(ptr);
 }
-
-
-
 extern "C" void *realloc(void *ptr, size_t size)
 {
-  MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, realloc, ptr, size);
-  return retval;
+  return fred_realloc(ptr, size);
 }
+extern "C" void *__libc_memalign(size_t boundary, size_t size)
+{
+  return fred_libc_memalign(boundary, size);
+}
+extern "C" void *valloc(size_t size)
+{
+  return __libc_memalign(sysconf(_SC_PAGESIZE), size);
+}
+
 
 static bool isPartOfAddrRangeAlreadyMmapped(void *addr, size_t length)
 {

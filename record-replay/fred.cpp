@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+#include <malloc.h>
 
 #include "constants.h"
 #include "fred_wrappers.h"
@@ -40,6 +41,8 @@
 
 static inline void memfence() {  asm volatile ("mfence" ::: "memory"); }
 void fred_setup_trampolines();
+void fred_setup_malloc_family_trampolines();
+void fred_uninstall_malloc_family_trampolines();
 
 static int sync_mode_pre_ckpt = SYNC_NOOP;
 
@@ -178,6 +181,9 @@ void fred_post_suspend ()
 void fred_post_checkpoint_resume()
 {
   initSyncAddresses();
+  if (jalib::Filesystem::GetProgramName() == "firefox-bin") {
+    fred_setup_malloc_family_trampolines();
+  }
   set_sync_mode(sync_mode_pre_ckpt);
   sync_mode_pre_ckpt = SYNC_NOOP;
   initLogsForRecordReplay();
@@ -189,6 +195,9 @@ void fred_post_restart_resume()
 {
   log_entry_t temp_entry;
   initSyncAddresses();
+  if (jalib::Filesystem::GetProgramName() == "firefox-bin") {
+    fred_setup_malloc_family_trampolines();
+  }
   set_sync_mode(SYNC_REPLAY);
   sync_mode_pre_ckpt = SYNC_NOOP;
   initLogsForRecordReplay();
@@ -319,10 +328,6 @@ extern "C" void fred_free(void *ptr);
 
 extern "C" void prepareFredWrappers()
 {
- trampoline_info_t calloc_trampoline_info;
-  trampoline_info_t malloc_trampoline_info;
-  trampoline_info_t free_trampoline_info;
-
   void *(*old_malloc_hook) (size_t, const void *);
   void *(*old_realloc_hook) (void *, size_t, const void *);
   void *(*old_memalign_hook) (size_t, size_t, const void *);
@@ -339,24 +344,14 @@ extern "C" void prepareFredWrappers()
 
   // FIXME: Remove JALLOC_HELPER_... after the release.
   JALLOC_HELPER_DISABLE_LOCKS();
-  dmtcp_setup_trampoline_at_addr((void*) &malloc, (void*) &fred_malloc,
-                         &malloc_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &calloc, (void*) &fred_calloc,
-                         &calloc_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &free, (void*) &fred_free,
-                         &free_trampoline_info);
-
+  fred_setup_malloc_family_trampolines();
 
   fred_wrappers_initializing = 1;
   initialize_wrappers();
   //dmtcp_process_event(DMTCP_EVENT_INIT_WRAPPERS, NULL);
   fred_wrappers_initializing = 0;
 
-
-
-  UNINSTALL_TRAMPOLINE(calloc_trampoline_info);
-  UNINSTALL_TRAMPOLINE(malloc_trampoline_info);
-  UNINSTALL_TRAMPOLINE(free_trampoline_info);
+  fred_uninstall_malloc_family_trampolines();
 
   __malloc_hook = old_malloc_hook;
   __realloc_hook = old_realloc_hook;

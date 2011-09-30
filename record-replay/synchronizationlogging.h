@@ -86,6 +86,9 @@ static inline bool isProcessGDB() {
 #define MMAP_NO_SYNC         (mmap_no_sync == 1)
 // Defined in dmtcpworker.cpp:
 LIB_PRIVATE extern __thread int mmap_no_sync;
+#define SET_IN_MALLOC_WRAPPER()   (in_malloc_wrapper = 1)
+#define UNSET_IN_MALLOC_WRAPPER() (in_malloc_wrapper = 0)
+#define IN_MALLOC_WRAPPER         (in_malloc_wrapper == 1)
 
 #define TURN_CHECK_P(name) int name(log_entry_t *e1, log_entry_t *e2)
 
@@ -1512,6 +1515,8 @@ LIB_PRIVATE extern dmtcp::SynchronizationLog global_log;
 /* Thread locals: */
 LIB_PRIVATE extern __thread clone_id_t my_clone_id;
 LIB_PRIVATE extern __thread int in_mmap_wrapper;
+LIB_PRIVATE extern __thread int in_malloc_wrapper;
+LIB_PRIVATE extern __thread int mmap_ignore_fd;
 LIB_PRIVATE extern __thread unsigned char isOptionalEvent;
 LIB_PRIVATE extern __thread bool ok_to_log_next_func;
 

@@ -62,6 +62,8 @@ LIB_PRIVATE dmtcp::SynchronizationLog global_log;
 /* Thread locals: */
 LIB_PRIVATE __thread clone_id_t my_clone_id = -1;
 LIB_PRIVATE __thread int in_mmap_wrapper = 0;
+LIB_PRIVATE __thread int in_malloc_wrapper = 0;
+LIB_PRIVATE __thread int mmap_ignore_fd = 0;
 LIB_PRIVATE __thread unsigned char isOptionalEvent = 0;
 LIB_PRIVATE __thread bool ok_to_log_next_func = false;
 
@@ -3139,12 +3141,10 @@ static inline bool is_optional_event_for(event_code_t event,
   case fwrite_event:
   case fread_event:
   case getc_event:
-  case malloc_event:
-  case calloc_event:
-  case realloc_event:
     return query || opt_event == mmap_event;
   case fdopen_event:
-    return query || opt_event == mmap_event || opt_event == malloc_event || isPthreadMutexEvent;
+    return query || opt_event == mmap_event || opt_event == malloc_event ||
+      isPthreadMutexEvent;
   case fopen64_event:
   case fopen_event:
   case freopen_event:
@@ -3169,6 +3169,12 @@ static inline bool is_optional_event_for(event_code_t event,
   case getdelim_event:
     return query || opt_event == malloc_event || opt_event == realloc_event ||
       opt_event == mmap_event;
+  case malloc_event:
+  case calloc_event:
+  case realloc_event:
+  case free_event:
+  case libc_memalign_event:
+    return query || opt_event == mmap_event || isPthreadMutexEvent;
   default:
      return false;
   }
