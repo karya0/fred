@@ -310,10 +310,57 @@ EXTERNC int __dyn_dmtcp_userSynchronizedEventEnd()
 
 int fred_wrappers_initializing = 0;
 
-extern "C" void prepareFredWrappers() {
+extern "C" void *fred_calloc(size_t nmemb, size_t size);
+extern "C" void *fred_malloc(size_t size);
+extern "C" void fred_free(void *ptr);
+
+extern "C" void prepareFredWrappers()
+{
+ trampoline_info_t calloc_trampoline_info;
+  trampoline_info_t malloc_trampoline_info;
+  trampoline_info_t free_trampoline_info;
+
+  void *(*old_malloc_hook) (size_t, const void *);
+  void *(*old_realloc_hook) (void *, size_t, const void *);
+  void *(*old_memalign_hook) (size_t, size_t, const void *);
+  void  (*old_free_hook) (void*, const void *);
+
+  old_malloc_hook = __malloc_hook;
+  old_realloc_hook = __realloc_hook;
+  old_memalign_hook = __memalign_hook;
+  old_free_hook = __free_hook;
+  __malloc_hook = NULL;
+  __realloc_hook = NULL;
+  __memalign_hook = NULL;
+  __free_hook = NULL;
+
+  // FIXME: Remove JALLOC_HELPER_... after the release.
+  JALLOC_HELPER_DISABLE_LOCKS();
+  dmtcp_setup_trampoline_at_addr((void*) &malloc, (void*) &fred_malloc,
+                         &malloc_trampoline_info);
+  dmtcp_setup_trampoline_at_addr((void*) &calloc, (void*) &fred_calloc,
+                         &calloc_trampoline_info);
+  dmtcp_setup_trampoline_at_addr((void*) &free, (void*) &fred_free,
+                         &free_trampoline_info);
+
+
   fred_wrappers_initializing = 1;
+  sleep(1);
   initialize_wrappers();
   //dmtcp_process_event(DMTCP_EVENT_INIT_WRAPPERS, NULL);
   fred_wrappers_initializing = 0;
+
+
+
+  UNINSTALL_TRAMPOLINE(calloc_trampoline_info);
+  UNINSTALL_TRAMPOLINE(malloc_trampoline_info);
+  UNINSTALL_TRAMPOLINE(free_trampoline_info);
+
+  __malloc_hook = old_malloc_hook;
+  __realloc_hook = old_realloc_hook;
+  __memalign_hook = old_memalign_hook;
+  __free_hook = old_free_hook;
+
+  JALLOC_HELPER_ENABLE_LOCKS();
 }
 #endif

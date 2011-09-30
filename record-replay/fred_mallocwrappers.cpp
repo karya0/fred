@@ -282,7 +282,7 @@ static void my_free_hook (void *ptr, const void *caller)
 static char wrapper_init_buf[1024];
 static bool mem_allocated_for_initializing_wrappers = false;
 
-extern "C" void *calloc(size_t nmemb, size_t size)
+extern "C" void *fred_calloc(size_t nmemb, size_t size)
 {
   if (fred_wrappers_initializing) {
     JASSERT(!mem_allocated_for_initializing_wrappers);
@@ -291,11 +291,17 @@ extern "C" void *calloc(size_t nmemb, size_t size)
     mem_allocated_for_initializing_wrappers = true;
     return (void*) wrapper_init_buf;
   }
+  void *ret_addr = GET_RETURN_ADDRESS();
+  if ((!shouldSynchronize(ret_addr) && !log_all_allocs) ||
+      jalib::Filesystem::GetProgramName() == "gdb") {
+    void *retval = _real_calloc (nmemb, size);
+    return retval;
+  }
   MALLOC_FAMILY_BASIC_SYNC_WRAPPER(void*, calloc, nmemb, size);
   return retval;
 }
 
-extern "C" void *malloc(size_t size)
+extern "C" void *fred_malloc(size_t size)
 {
   if (fred_wrappers_initializing) {
     return calloc(1, size);
@@ -318,7 +324,7 @@ extern "C" void *valloc(size_t size)
 
 // FIXME:  Add wrapper for alloca(), posix_memalign(), etc.,
 
-extern "C" void free(void *ptr)
+extern "C" void fred_free(void *ptr)
 {
   if (fred_wrappers_initializing) {
     JASSERT(mem_allocated_for_initializing_wrappers);
@@ -351,6 +357,18 @@ extern "C" void free(void *ptr)
     _real_pthread_mutex_unlock(&allocation_lock);
   }
 }
+
+extern "C" void *calloc(size_t nmemb, size_t size) {
+  return fred_calloc(nmemb, size);
+}
+extern "C" void *malloc(size_t size) {
+  return fred_calloc(1, size);
+}
+extern "C" void free(void *ptr) {
+  fred_free(ptr);
+}
+
+
 
 extern "C" void *realloc(void *ptr, size_t size)
 {
