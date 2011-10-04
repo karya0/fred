@@ -151,7 +151,7 @@ static void *start_wrapper(void *arg)
    size - If non-0, force new stack to this size.
 */
 static void setupThreadStack(pthread_attr_t *attr_out,
-    const pthread_attr_t *user_attr, size_t size)
+                             const pthread_attr_t *user_attr, size_t size)
 {
   size_t stack_size;
   void *stack_addr;
@@ -191,7 +191,7 @@ static void setupThreadStack(pthread_attr_t *attr_out,
   // mmap() wrapper handles forcing it to the same place on replay.
   void *s = mmap(NULL, mmap_size, PROT_READ | PROT_WRITE, mmap_flags, -1, 0);
   if (s == MAP_FAILED)  {
-    JTRACE ( "Failed to map thread stack." ) ( mmap_size )
+    JNOTE ( "Failed to map thread stack." ) ( mmap_size )
       ( strerror(errno) ) (global_log.currentEntryIndex());
     JASSERT ( false );
   }
@@ -445,10 +445,19 @@ static int internal_pthread_create(pthread_t *thread,
   return retval;
 }
 
+#define PTHREAD_MUTEX_WRAPPER_HEADER_RAW(ret_type, name, real_func, ...) \
+  void *return_addr = GET_RETURN_ADDRESS();                             \
+  do {                                                                  \
+    if ((!shouldSynchronize(return_addr) && !log_all_locks) ||          \
+        jalib::Filesystem::GetProgramName() == "gdb") {                 \
+      return real_func(__VA_ARGS__);                                    \
+    }                                                                   \
+  } while(0)
+
 extern "C" int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
-  WRAPPER_HEADER_RAW(int, pthread_mutex_lock, _real_pthread_mutex_lock,
-                     mutex);
+  PTHREAD_MUTEX_WRAPPER_HEADER_RAW(int, pthread_mutex_lock,
+                                   _real_pthread_mutex_lock, mutex);
 
   /* NOTE: Don't call JTRACE (or anything that calls JTRACE) before
     this point. */
@@ -458,8 +467,12 @@ extern "C" int pthread_mutex_lock(pthread_mutex_t *mutex)
 
 extern "C" int pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
-  WRAPPER_HEADER(int, pthread_mutex_trylock, _real_pthread_mutex_trylock,
-                 mutex);
+  PTHREAD_MUTEX_WRAPPER_HEADER_RAW(int, pthread_mutex_trylock,
+                                   _real_pthread_mutex_trylock, mutex);
+  int retval;
+  log_entry_t my_entry = create_pthread_mutex_trylock_entry(my_clone_id,
+                                                     pthread_mutex_trylock_event,
+                                                     mutex);
   /* NOTE: Don't call JTRACE (or anything that calls JTRACE) before
     this point. */
   if (SYNC_IS_REPLAY) {
@@ -480,8 +493,8 @@ extern "C" int pthread_mutex_trylock(pthread_mutex_t *mutex)
 
 extern "C" int pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
-  WRAPPER_HEADER_RAW(int, pthread_mutex_unlock, _real_pthread_mutex_unlock,
-                     mutex);
+  PTHREAD_MUTEX_WRAPPER_HEADER_RAW(int, pthread_mutex_unlock,
+                                   _real_pthread_mutex_unlock, mutex);
   /* NOTE: Don't call JTRACE (or anything that calls JTRACE) before
     this point. */
   int retval = internal_pthread_mutex_unlock(mutex);

@@ -47,10 +47,10 @@ static void pthread_atfork_child()
 {
   set_sync_mode(SYNC_NOOP);
   log_all_allocs = 0;
+  log_all_locks = 0;
 
   global_log.destroy(SYNC_RECORD);
 }
-
 
 static void recordReplayInit()
 {
@@ -152,6 +152,7 @@ void fred_post_suspend ()
 
   set_sync_mode(SYNC_NOOP);
   log_all_allocs = 0;
+  log_all_locks = 0;
 
   global_log.destroy(sync_mode_pre_ckpt);
   close_read_log();
@@ -181,6 +182,7 @@ void fred_post_checkpoint_resume()
   sync_mode_pre_ckpt = SYNC_NOOP;
   initLogsForRecordReplay();
   log_all_allocs = 1;
+  log_all_locks = 1;
 }
 
 void fred_post_restart_resume()
@@ -207,6 +209,7 @@ void fred_post_restart_resume()
     sem_post(&(*clone_id_to_sem_table)[clone_id]);
   }
   log_all_allocs = 1;
+  log_all_locks = 1;
 }
 
 void fred_reset_on_fork()
@@ -345,7 +348,6 @@ extern "C" void prepareFredWrappers()
 
 
   fred_wrappers_initializing = 1;
-  sleep(1);
   initialize_wrappers();
   //dmtcp_process_event(DMTCP_EVENT_INIT_WRAPPERS, NULL);
   fred_wrappers_initializing = 0;

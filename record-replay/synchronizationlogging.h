@@ -1498,6 +1498,7 @@ LIB_PRIVATE extern int             read_data_fd;
 LIB_PRIVATE extern int             sync_logging_branch;
 LIB_PRIVATE extern int             log_all_allocs;
 LIB_PRIVATE extern pthread_mutex_t read_data_mutex;
+LIB_PRIVATE extern int             log_all_locks;
 
 LIB_PRIVATE extern dmtcp::SynchronizationLog global_log;
 

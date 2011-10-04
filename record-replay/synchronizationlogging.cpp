@@ -34,9 +34,9 @@
 #include  "jtimer.h"
 #include  "jfilesystem.h"
 #include <sys/select.h>
+#include <sys/resource.h>
 #include "synchronizationlogging.h"
 #include "log.h"
-#include <sys/resource.h>
 
 
 // TODO: Do we need LIB_PRIVATE again here if we had already specified it in
@@ -54,6 +54,7 @@ LIB_PRIVATE int             sync_logging_branch = 0;
 /* Setting this will log/replay *ALL* malloc family
    functions (i.e. including ones from DMTCP, std C++ lib, etc.). */
 LIB_PRIVATE int             log_all_allocs = 0;
+LIB_PRIVATE int             log_all_locks = 0;
 LIB_PRIVATE pthread_mutex_t read_data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 LIB_PRIVATE dmtcp::SynchronizationLog global_log;
@@ -3107,18 +3108,21 @@ static inline bool is_optional_event_for(event_code_t event,
                                          bool query)
 {
   /* Group together events that share the same optional events. */
+  bool isPthreadMutexEvent = (opt_event == pthread_mutex_lock_event ||
+                              opt_event == pthread_mutex_unlock_event);
+
   switch (event) {
   case getcwd_event:
   case opendir_event:
-    return query || opt_event == malloc_event;
+    return query || opt_event == malloc_event || isPthreadMutexEvent;
   case pthread_cond_signal_event:
   case pthread_cond_timedwait_event:
   case pthread_cond_wait_event:
   case pthread_cond_broadcast_event:
-    return query || opt_event == calloc_event;
+    return query || opt_event == calloc_event || isPthreadMutexEvent;
   case closedir_event:
   case fclose_event:
-    return query || opt_event == free_event;
+    return query || opt_event == free_event || isPthreadMutexEvent;
   case accept4_event:
   case accept_event:
   case fgets_event:
@@ -3139,7 +3143,7 @@ static inline bool is_optional_event_for(event_code_t event,
   case realloc_event:
     return query || opt_event == mmap_event;
   case fdopen_event:
-    return query || opt_event == mmap_event || opt_event == malloc_event;
+    return query || opt_event == mmap_event || opt_event == malloc_event || isPthreadMutexEvent;
   case fopen64_event:
   case fopen_event:
   case freopen_event:
@@ -3148,7 +3152,7 @@ static inline bool is_optional_event_for(event_code_t event,
   case setsockopt_event:
   case tmpfile_event:
     return query || opt_event == malloc_event ||
-      opt_event == free_event || opt_event == mmap_event;
+      opt_event == free_event || opt_event == mmap_event || isPthreadMutexEvent;
   case freeaddrinfo_event:
   case getaddrinfo_event:
   case getgrgid_r_event:
@@ -3159,7 +3163,8 @@ static inline bool is_optional_event_for(event_code_t event,
     return query || opt_event == malloc_event ||
       opt_event == free_event || opt_event == calloc_event ||
       opt_event == mmap_event || opt_event == ftell_event ||
-      opt_event == fopen_event || opt_event == fclose_event;
+      opt_event == fopen_event || opt_event == fclose_event ||
+      isPthreadMutexEvent;
   case getdelim_event:
     return query || opt_event == malloc_event || opt_event == realloc_event ||
       opt_event == mmap_event;
@@ -3207,6 +3212,12 @@ static void execute_optional_event(int opt_event_num)
     ok_to_log_next_func = true;
     // No need to execute ftell().  It has no side effects.
     long int offset = ftell(fp);
+  } else if (opt_event_num == pthread_mutex_lock_event) {
+    pthread_mutex_t *mutex = GET_FIELD(temp_entry, pthread_mutex_lock, addr);
+    pthread_mutex_lock(mutex);
+  } else if (opt_event_num == pthread_mutex_unlock_event) {
+    pthread_mutex_t *mutex = GET_FIELD(temp_entry, pthread_mutex_unlock, addr);
+    pthread_mutex_unlock(mutex);
   } else {
     JASSERT (false)(opt_event_num).Text("No action known for optional event.");
   }

@@ -428,7 +428,6 @@ extern "C" void *mmap(void *addr, size_t length, int prot, int flags,
     flags |= MAP_FIXED;
     JASSERT(!isPartOfAddrRangeAlreadyMmapped(addr, length));
     retval = _real_mmap (addr, length, prot | PROT_WRITE, flags, fd, offset);
-    if (retval != GET_COMMON(my_entry, retval)) sleep(20);
     JASSERT ( retval == GET_COMMON(my_entry, retval) ) (retval)
       (GET_COMMON(my_entry, retval)) (JASSERT_ERRNO);
     if (mmap_read_from_readlog) {
