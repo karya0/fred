@@ -55,6 +55,35 @@ static void pthread_atfork_child()
   global_log.destroy(SYNC_RECORD);
 }
 
+static void prepareMallocEtcForFirefox()
+{
+  //return;
+  if ((void*)__malloc_hook == (void*) &malloc) {
+    __malloc_hook = NULL;
+    __realloc_hook = NULL;
+    __memalign_hook = NULL;
+    __free_hook = NULL;
+
+    struct mallinfo info;
+    info = mallinfo();
+
+    fred_setup_malloc_family_trampolines();
+  }
+
+  /* Currently, the processes, under record/replay, mmap the
+   * synchronization-log file with shared mapping. During record/replay, any
+   * child process created through fork() has access to this log and will
+   * modify it while executing some system call that is being logged. We do
+   * handle the fork() process by dmtcp_process_event() but that is too late.
+   * glibc:fork() will call the functions registered with pthread_atfork() even
+   * before the glibc:fork() returns. Thus it is necessary to register our own
+   * handle which would disable logging for the child process.
+   * This whole scheme works fine when we do not wish to record/replay events
+   * within the child process.
+   */
+  pthread_atfork(NULL, NULL, pthread_atfork_child);
+}
+
 static void recordReplayInit()
 {
   // As of rev. 816, this line caused DMTCP with standard ./configure
@@ -100,19 +129,6 @@ static void recordReplayInit()
   } else if (SYNC_IS_RECORD) {
     addNextLogEntry(my_entry);
   }
-
-  /* Currently, the processes, under record/replay, mmap the
-   * synchronization-log file with shared mapping. During record/replay, any
-   * child process created through fork() has access to this log and will
-   * modify it while executing some system call that is being logged. We do
-   * handle the fork() process by dmtcp_process_event() but that is too late.
-   * glibc:fork() will call the functions registered with pthread_atfork() even
-   * before the glibc:fork() returns. Thus it is necessary to register our own
-   * handle which would disable logging for the child process.
-   * This whole scheme works fine when we do not wish to record/replay events
-   * within the child process.
-   */
-  pthread_atfork(NULL, NULL, pthread_atfork_child);
 
   /* setlocale(LC_ALL, "") will cause the process to mmap all locale related
    * files at once into the process memory. We need to do this because any call
@@ -195,9 +211,6 @@ void fred_post_restart_resume()
 {
   log_entry_t temp_entry;
   initSyncAddresses();
-  if (jalib::Filesystem::GetProgramName() == "firefox-bin") {
-    fred_setup_malloc_family_trampolines();
-  }
   set_sync_mode(SYNC_REPLAY);
   sync_mode_pre_ckpt = SYNC_NOOP;
   initLogsForRecordReplay();
@@ -322,12 +335,19 @@ EXTERNC int __dyn_dmtcp_userSynchronizedEventEnd()
 
 int fred_wrappers_initializing = 0;
 
-extern "C" void *fred_calloc(size_t nmemb, size_t size);
-extern "C" void *fred_malloc(size_t size);
-extern "C" void fred_free(void *ptr);
+static void my_init_hook (void)
+{
+  __malloc_hook = NULL;
+  __realloc_hook = NULL;
+  __memalign_hook = NULL;
+  __free_hook = NULL;
+  fred_setup_malloc_family_trampolines();
+}
+
 
 extern "C" void prepareFredWrappers()
 {
+  //sleep(4);
   void *(*old_malloc_hook) (size_t, const void *);
   void *(*old_realloc_hook) (void *, size_t, const void *);
   void *(*old_memalign_hook) (size_t, size_t, const void *);
@@ -359,5 +379,9 @@ extern "C" void prepareFredWrappers()
   __free_hook = old_free_hook;
 
   JALLOC_HELPER_ENABLE_LOCKS();
+
+
+  mmap_ignore_fd = 1;
+  prepareMallocEtcForFirefox();
 }
 #endif

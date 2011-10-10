@@ -208,7 +208,8 @@ static void my_free_hook (void *ptr, const void *caller)
 
 #define MMAP_WRAPPER_HEADER(name, ...)                                  \
   void *return_addr = GET_RETURN_ADDRESS();                             \
-  if ((!shouldSynchronize(return_addr) && !log_all_allocs) ||           \
+  if ((!shouldSynchronize(return_addr) &&                               \
+       (SYNC_IS_NOOP || !log_all_allocs)) ||                            \
       isProcessGDB()) {                                                 \
     void *retval = _real_ ## name (__VA_ARGS__);                        \
     UNSET_IN_MMAP_WRAPPER();                                            \
@@ -227,16 +228,18 @@ static void my_free_hook (void *ptr, const void *caller)
   _real_pthread_mutex_unlock(&mmap_lock);                               \
   WRAPPER_REPLAY_END(name);
 
-#define MALLOC_FAMILY_WRAPPER_HEADER_TYPED(ret_type, name, ...)         \
-  void *return_addr = GET_RETURN_ADDRESS();                             \
-  if ((!shouldSynchronize(return_addr) && !log_all_allocs) ||           \
+#define MALLOC_FAMILY_WRAPPER_HEADER_TYPED(ret_type, name, ...)             \
+  void *return_addr = GET_RETURN_ADDRESS();                                 \
+  if ((!shouldSynchronize(return_addr) &&                               \
+       (SYNC_IS_NOOP || !log_all_allocs)) ||                            \
       isProcessGDB()) {                                                 \
-    ret_type retval = _real_ ## name (__VA_ARGS__);                     \
-    return retval;                                                      \
-  }                                                                     \
-  log_entry_t my_entry = create_ ## name ## _entry(my_clone_id,         \
-                                                   name ## _event,      \
-                                                   __VA_ARGS__);        \
+    ret_type retval = _real_ ## name (__VA_ARGS__);                         \
+    UNSET_IN_MALLOC_WRAPPER();                                              \
+    return retval;                                                          \
+  }                                                                         \
+  log_entry_t my_entry = create_ ## name ## _entry(my_clone_id,             \
+                                                   name ## _event,          \
+                                                   __VA_ARGS__);            \
   ret_type retval;
 
 #define MALLOC_FAMILY_WRAPPER_HEADER(name, ...)                         \
@@ -317,18 +320,35 @@ extern "C" void *fred_libc_memalign(size_t boundary, size_t size)
   return retval;
 }
 
-// FIXME:  Add wrapper for alloca(), posix_memalign(), etc.,
+extern "C" int fred_posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+  *memptr = fred_libc_memalign(alignment, size);
+  if (*memptr == NULL) {
+    return -1;
+  }
+  return 0;
+}
 
 extern "C" void fred_free(void *ptr)
 {
+  void *cmp = (void*)0x00007fff00000000;
+  while (ptr >= cmp) {
+    return;
+    sleep(10);
+  }
   if (fred_wrappers_initializing) {
     JASSERT(mem_allocated_for_initializing_wrappers);
     JASSERT(ptr == wrapper_init_buf);
     return;
   }
+  if (ptr == NULL) {
+    return;
+  }
+
   SET_IN_MALLOC_WRAPPER();
   void *return_addr = GET_RETURN_ADDRESS();
-  if ((!shouldSynchronize(return_addr) && !log_all_allocs) ||
+  if ((!shouldSynchronize(return_addr) &&
+       (SYNC_IS_NOOP || !log_all_allocs)) ||
       ptr == NULL || isProcessGDB()) {
     _real_pthread_mutex_lock(&allocation_lock);
     _real_free(ptr);
@@ -384,8 +404,13 @@ extern "C" void *__libc_memalign(size_t boundary, size_t size)
 }
 extern "C" void *valloc(size_t size)
 {
-  return __libc_memalign(sysconf(_SC_PAGESIZE), size);
+  return fred_libc_memalign(sysconf(_SC_PAGESIZE), size);
 }
+extern "C" int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+  return fred_posix_memalign(memptr, alignment, size);
+}
+
 
 
 static bool isPartOfAddrRangeAlreadyMmapped(void *addr, size_t length)

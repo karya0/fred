@@ -33,6 +33,7 @@ static trampoline_info_t calloc_trampoline_info;
 static trampoline_info_t realloc_trampoline_info;
 static trampoline_info_t free_trampoline_info;
 static trampoline_info_t memalign_trampoline_info;
+static trampoline_info_t posix_memalign_trampoline_info;
 
 extern "C" void *fred_calloc(size_t nmemb, size_t size);
 extern "C" void *fred_malloc(size_t size);
@@ -179,19 +180,23 @@ void fred_setup_trampolines()
                          &mmap_trampoline_info);
 }
 
+extern "C" void *memalign_internal(size_t alignment, size_t size);
 void fred_setup_malloc_family_trampolines()
 {
-  dmtcp_setup_trampoline_at_addr((void*) &malloc, (void*) &malloc_trampoline,
+  dmtcp_setup_trampoline_at_addr((void*) &malloc, (void*) &fred_malloc,
                                  &malloc_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &calloc, (void*) &calloc_trampoline,
+  dmtcp_setup_trampoline_at_addr((void*) &calloc, (void*) &fred_calloc,
                                  &calloc_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &realloc, (void*) &realloc_trampoline,
+  dmtcp_setup_trampoline_at_addr((void*) &realloc, (void*) &fred_realloc,
                                  &realloc_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &free, (void*) &free_trampoline,
+  dmtcp_setup_trampoline_at_addr((void*) &free, (void*) &fred_free,
                                  &free_trampoline_info);
-  dmtcp_setup_trampoline_at_addr((void*) &memalign, (void*) &memalign_trampoline,
+  dmtcp_setup_trampoline_at_addr((void*) &memalign,
+                                 (void*) &fred_libc_memalign,
                                  &memalign_trampoline_info);
- // dmtcp_setup_trampoline_at_addr((void*) &posix_memalign, (void*) &posix_memalign_trampoline, //                       &posix_memalign_trampoline_info);
+  dmtcp_setup_trampoline_at_addr((void*) &posix_memalign,
+                                 (void*) &fred_posix_memalign,
+                                 &posix_memalign_trampoline_info);
 }
 
 void fred_uninstall_malloc_family_trampolines()
@@ -201,5 +206,5 @@ void fred_uninstall_malloc_family_trampolines()
   UNINSTALL_TRAMPOLINE(realloc_trampoline_info);
   UNINSTALL_TRAMPOLINE(free_trampoline_info);
   UNINSTALL_TRAMPOLINE(memalign_trampoline_info);
-  //UNINSTALL_TRAMPOLINE(posix_memalign_trampoline_info);
+  UNINSTALL_TRAMPOLINE(posix_memalign_trampoline_info);
 }
