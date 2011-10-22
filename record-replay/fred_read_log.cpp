@@ -56,13 +56,13 @@ void print_log_entry_common(int idx, log_entry_t *entry) {
 
   switch ((long) (unsigned long) GET_COMMON_PTR(entry, retval)) {
     case 0:
-      printf("retval=  0     , "); break;
+      printf("ret=  0      , "); break;
     case -1:
-      printf("retval= -1     , "); break;
+      printf("ret= -1      , "); break;
     default:
-      printf("retval=%p, ", GET_COMMON_PTR(entry, retval)); break;
+      printf("ret=%p, ", GET_COMMON_PTR(entry, retval)); break;
   }
-  printf("log_offset=%2ld, my_errno=%d, isOptional=%d, return_addr:%p",
+  printf("log_off=%2ld, errno=%d, isOpt=%d, ret_addr:%p",
          GET_COMMON_PTR(entry, log_offset), GET_COMMON_PTR(entry, my_errno),
          GET_COMMON_PTR(entry, isOptional), GET_COMMON_PTR(entry, return_addr));
 }
