@@ -110,9 +110,13 @@ void dmtcp::SynchronizationLog::init_shm()
   JASSERT ( retval != -1 ) ( strerror(errno) );
   JTRACE ( "Opened shared memory region." ) ( name );
 
+  if (mmapAddr == NULL) {
+    JASSERT(SYNC_IS_RECORD);
+    mmapAddr = (void*) 0x2f000000000L;
+  }
   _sharedInterfaceInfo =
     (fred_interface_info_t *) mmap(mmapAddr, FRED_INTERFACE_SHM_SIZE,
-                                   PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                                   PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
   JASSERT((void*)_sharedInterfaceInfo != MAP_FAILED);
   JTRACE ( "Mapped shared memory region." ) ( _sharedInterfaceInfo );
   close(fd);
@@ -123,7 +127,8 @@ void dmtcp::SynchronizationLog::init_shm()
 
   LogMetadata *metadata = (LogMetadata *) _startAddr;
 
-  if (mmapAddr == NULL) {
+  if (SYNC_IS_RECORD) { //mmapAddr == NULL) {
+    JASSERT(mmapAddr == (void*) 0x2f000000000L);
     JASSERT(SYNC_IS_RECORD);
     JTRACE("RECORD; filling in recordedSharedInterfaceInfoMapAddr.")
       ((long)(void*)_sharedInterfaceInfo);
@@ -246,6 +251,11 @@ void dmtcp::SynchronizationLog::map_in(const char *path, size_t size,
   JASSERT(tempAddr != MAP_FAILED);
   tempMetadata = (LogMetadata *) tempAddr;
   mmapAddr = tempMetadata->recordedStartAddr;
+  if (mmapAddr == NULL) {
+    JASSERT(SYNC_IS_RECORD);
+    mmapAddr = (void*) 0x3f000000000L;
+  }
+
   if (mmapAddr != NULL) {
     mmapFlags |= MAP_FIXED;
   }
