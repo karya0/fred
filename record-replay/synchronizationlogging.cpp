@@ -201,8 +201,8 @@ static const char *logLibraryBlacklistPattern[] = {
   "/libc-2",
   "/libpthread-2",
   // FIXME: Shouldn't we log libdl and ld.so as well?
-  "/libdl-2",
-  "/ld-2"
+  //"/libdl-2",
+  //"/ld-2"
 };
 
 static bool shouldLogArea(char *area_name)
@@ -256,7 +256,7 @@ void initSyncAddresses()
   }
   _real_close(mapsFd);
 
-  for (int i = 1; i < areasToNotLogLen; i++) {
+  for (size_t i = 1; i < areasToNotLogLen; i++) {
     JASSERT(areasToNotLog[i].addr >= areasToNotLog[i-1].endAddr)
       (areasToNotLog[i].name) (areasToNotLog[i].addr) (areasToNotLog[i].endAddr)
       (areasToNotLog[i-1].name) (areasToNotLog[i-1].addr)
@@ -3262,7 +3262,9 @@ void waitForTurn(log_entry_t *my_entry, turn_pred_t pred)
       if (!is_optional_event_for((event_code_t)GET_COMMON_PTR(my_entry, event),
                                  (event_code_t)GET_COMMON(temp_entry, event),
                                  false)) {
-        JASSERT(false);
+        JASSERT(false)
+          ((event_code_t)GET_COMMON_PTR(my_entry, event))
+          ((event_code_t)GET_COMMON(temp_entry, event));
       }
       sem_post(&sem);
       execute_optional_event(GET_COMMON(temp_entry, event));
