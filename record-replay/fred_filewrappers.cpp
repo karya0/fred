@@ -1410,11 +1410,11 @@ extern "C" int setvbuf(FILE *stream, char *buf, int mode, size_t size)
 static int _fcntl(int fd, int cmd, long arg_3_l, struct flock *flock_ptr)
 {
   if (arg_3_l == -1 && flock_ptr == NULL) {
-    return _real_fcntl(fd, cmd);
+    return _real_fcntl(fd, cmd, NULL);
   } else if (arg_3_l == -1) {
-    return _real_fcntl(fd, cmd, flock_ptr);
+    return _real_fcntl(fd, cmd, (void*) flock_ptr);
   } else {
-    return _real_fcntl(fd, cmd, arg_3_l);
+    return _real_fcntl(fd, cmd, (void*) (unsigned long) arg_3_l);
   }
 }
 
@@ -1424,6 +1424,7 @@ extern "C" int fcntl(int fd, int cmd, ...)
   // Handling the variable number of arguments
   long arg_3_l = -1;
   struct flock *flock_ptr = NULL;
+  void *arg = NULL;
   va_start( ap, cmd );
   switch (cmd) {
     case F_DUPFD:
@@ -1435,6 +1436,7 @@ extern "C" int fcntl(int fd, int cmd, ...)
     case F_SETLEASE:
     case F_NOTIFY:
       arg_3_l = va_arg ( ap, long );
+      arg = (void*) arg_3_l;
       va_end ( ap );
       break;
     case F_GETFD:
@@ -1448,6 +1450,7 @@ extern "C" int fcntl(int fd, int cmd, ...)
     case F_SETLKW:
     case F_GETLK:
       flock_ptr = va_arg ( ap, struct flock *);
+      arg = (void*) flock_ptr;
       va_end ( ap );
       break;
     // TODO:Handle F_GETOWN_EX
@@ -1455,7 +1458,7 @@ extern "C" int fcntl(int fd, int cmd, ...)
       break;
   }
 
-  WRAPPER_HEADER(int, fcntl, _fcntl, fd, cmd, arg_3_l, flock_ptr);
+  WRAPPER_HEADER(int, fcntl, _real_fcntl, fd, cmd, arg);
 
   if (SYNC_IS_REPLAY) {
     WRAPPER_REPLAY_START(fcntl);
@@ -1464,7 +1467,7 @@ extern "C" int fcntl(int fd, int cmd, ...)
     }
     WRAPPER_REPLAY_END(fcntl);
   } else if (SYNC_IS_RECORD) {
-    retval = _fcntl(fd, cmd, arg_3_l, flock_ptr);
+    retval = _real_fcntl(fd, cmd, arg);
     if (cmd == F_GETLK && retval != -1 && flock_ptr != NULL) {
       SET_FIELD2(my_entry, fcntl, ret_flock, *flock_ptr);
     }

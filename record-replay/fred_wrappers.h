@@ -86,7 +86,7 @@ extern "C"
   MACRO(int, dup, int oldfd) \
   MACRO(int, dup2, int oldfd, int newfd) \
   MACRO(int, dup3, int oldfd, int newfd, int flags) \
-  MACRO(int, fcntl, int fd, int cmd, ...) \
+  MACRO(int, fcntl, int fd, int cmd, void *arg) \
   MACRO(int, fclose, FILE *fp) \
   MACRO(int, fchdir, int fd) \
   MACRO(int, fdatasync, int fd) \
@@ -139,8 +139,8 @@ extern "C"
   MACRO(void*, mmap64, void *addr, size_t length, int prot, int flags, int fd, off64_t offset) \
   MACRO(int, munmap, void *addr, size_t length) \
   MACRO(void*, mremap, void *old_address, size_t old_size, size_t new_size, int flags, void *new_address) \
-  MACRO(int, open, const char *pathname, int flags, ...) \
-  MACRO(int, open64, const char *pathname, int flags, ...) \
+  MACRO(int, open, const char *pathname, int flags, mode_t mode) \
+  MACRO(int, open64, const char *pathname, int flags, mode_t mode) \
   MACRO(int, openat, int dirfd, const char *pathname, int flags) \
   MACRO(DIR*, opendir, const char *name) \
   MACRO(ssize_t, pread, int fd, void *buf, size_t count, off_t offset) \
@@ -164,7 +164,7 @@ extern "C"
   MACRO(int, pthread_mutex_lock, pthread_mutex_t *mutex) \
   MACRO(int, pthread_mutex_trylock, pthread_mutex_t *mutex) \
   MACRO(int, pthread_mutex_unlock, pthread_mutex_t *mutex) \
-  MACRO(int, rand, void) \
+  MACRO(int, rand) \
   MACRO(ssize_t, read, int fd, void *buf, size_t count) \
   MACRO(ssize_t, readv, int fd, const struct iovec *iov, int iovcnt) \
   MACRO(struct dirent*, readdir, DIR *dirp) \
@@ -178,13 +178,13 @@ extern "C"
   MACRO(int, ppoll, struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, const sigset_t *sigmask) \
   MACRO(int, setsockopt, int s, int level, int optname, const void *optval, socklen_t optlen) \
   MACRO(int, getsockopt, int s, int level, int optname, void *optval, socklen_t *optlen) \
-  MACRO(int, ioctl, int d,  unsigned long int request, ...) \
+  MACRO(int, ioctl, int d,  int request, void *arg) \
   MACRO(int, sigwait, const sigset_t *set, int *sig) \
   MACRO(void, srand, unsigned int seed) \
   MACRO(int, socket, int domain, int type, int protocol) \
   MACRO(int, socketpair, int d, int type, int protocol, int sv[2]) \
   MACRO(time_t, time, time_t *tloc) \
-  MACRO(FILE*, tmpfile, void) \
+  MACRO(FILE*, tmpfile) \
   MACRO(int, truncate, const char *path, off_t length) \
   MACRO(int, ftruncate, int fd, off_t length) \
   MACRO(int, truncate64, const char *path, off64_t length) \
@@ -194,7 +194,7 @@ extern "C"
   MACRO(ssize_t, writev, int fd, const struct iovec *iov, int iovcnt) \
   MACRO(int, epoll_create, int size) \
   MACRO(int, epoll_create1, int flags) \
-  MACRO(int, epoll_ctl, int epfd, int op, int fd, struct epoll_event *event) \
+  MACRO(int, epoll_ctl, int epfd, int op, int fd, struct epoll_event *ev) \
   MACRO(int, epoll_wait, int epfd, struct epoll_event *events, int maxevents, int timeout) \
   MACRO(int, getpwnam_r, const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result) \
   MACRO(int, getpwuid_r, uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result) \
@@ -202,7 +202,7 @@ extern "C"
   MACRO(int, getgrgid_r, gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result) \
   MACRO(int, getaddrinfo, const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res) \
   MACRO(void, freeaddrinfo, struct addrinfo *res) \
-  MACRO(int, getnameinfo, const struct sockaddr *sa, socklen_t salen, char *host, socklen_t hostlen, char *serv, socklen_t servlen, unsigned int flags) \
+  MACRO(int, getnameinfo, const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags) \
   MACRO(ssize_t, sendto, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) \
   MACRO(ssize_t, sendmsg, int sockfd, const struct msghdr *msg, int flags) \
   MACRO(ssize_t, recvfrom, int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen) \
@@ -222,6 +222,13 @@ extern "C"
   MACRO(int, xstat64, int vers, const char *path, struct stat64 *buf) \
   MACRO(void*, libc_memalign, size_t boundary, size_t size)
 
+#define FOREACH_RECORD_REPLAY_WRAPPER_3(MACRO) \
+  MACRO(int, signal_handler, int sig, siginfo_t *info, void *data) \
+  MACRO(int, fscanf, FILE *stream, const char *format, va_list ap) \
+  MACRO(int, fprintf, FILE *stream, const char *format, va_list ap) \
+  MACRO(int, exec_barrier, int dummy) \
+  MACRO(int, user, int dummy)
+
 #define FOREACH_FRED_WRAPPER(MACRO) \
   MACRO(int, sigaction, int signum, const struct sigaction *act, struct sigaction *oldact) \
   MACRO(sighandler_t, signal, int signum, sighandler_t handler) \
@@ -229,14 +236,16 @@ extern "C"
 
 #define FOREACH_RECORD_REPLAY_WRAPPER(MACRO) \
   FOREACH_RECORD_REPLAY_WRAPPER_1(MACRO) \
-  FOREACH_RECORD_REPLAY_WRAPPER_2(MACRO)
+  FOREACH_RECORD_REPLAY_WRAPPER_2(MACRO) \
+  FOREACH_RECORD_REPLAY_WRAPPER_3(MACRO)
 
 # define ENUM(x) enum_ ## x
 # define GEN_ENUM(type, name, ...) ENUM(name),
   typedef enum {
     FOREACH_RECORD_REPLAY_WRAPPER(GEN_ENUM)
+    numRecordReplayWrappers,
     FOREACH_FRED_WRAPPER(GEN_ENUM)
-    numLibcWrappers
+    numTotalWrappers
   } LibcWrapperOffset;
 
 #define DECLARE_REAL_FUNCTION(type, name, ...) \

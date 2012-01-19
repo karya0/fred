@@ -48,6 +48,7 @@
 #include "util.h"
 #include "dmtcpmodule.h"
 #include "jfilesystem.h"
+#include "fred_wrappers.h"
 
 #undef WRAPPER_EXECUTION_ENABLE_CKPT
 #undef WRAPPER_EXECUTION_DISABLE_CKPT
@@ -333,170 +334,20 @@ LIB_PRIVATE extern __thread int mmap_no_sync;
     }                                                               \
   } while (0)
 
-#define FOREACH_NAME(MACRO, ...)                                               \
-    MACRO(accept, __VA_ARGS__)                                                 \
-    MACRO(accept4, __VA_ARGS__)                                                \
-    MACRO(access, __VA_ARGS__)                                                 \
-    MACRO(bind, __VA_ARGS__)                                                   \
-    MACRO(calloc, __VA_ARGS__)                                                 \
-    MACRO(chmod, __VA_ARGS__)                                                  \
-    MACRO(chown, __VA_ARGS__)                                                  \
-    MACRO(close, __VA_ARGS__)                                                  \
-    MACRO(closedir, __VA_ARGS__)                                               \
-    MACRO(connect, __VA_ARGS__)                                                \
-    MACRO(dup, __VA_ARGS__)                                                    \
-    MACRO(dup2, __VA_ARGS__)                                                   \
-    MACRO(dup3, __VA_ARGS__)                                                   \
-    MACRO(exec_barrier, __VA_ARGS__)                                           \
-    MACRO(fclose, __VA_ARGS__)                                                 \
-    MACRO(fchdir, __VA_ARGS__)                                                 \
-    MACRO(fcntl, __VA_ARGS__)                                                  \
-    MACRO(fdatasync, __VA_ARGS__)                                              \
-    MACRO(fdopen, __VA_ARGS__)                                                 \
-    MACRO(fdopendir, __VA_ARGS__)                                              \
-    MACRO(fgets, __VA_ARGS__)                                                  \
-    MACRO(ferror, __VA_ARGS__)                                                 \
-    MACRO(feof, __VA_ARGS__)                                                   \
-    MACRO(fileno, __VA_ARGS__)                                                 \
-    MACRO(fflush, __VA_ARGS__)                                                 \
-    MACRO(setvbuf, __VA_ARGS__)                                                \
-    MACRO(fopen, __VA_ARGS__)                                                  \
-    MACRO(fopen64, __VA_ARGS__)                                                \
-    MACRO(freopen, __VA_ARGS__)                                                \
-    MACRO(fprintf, __VA_ARGS__)                                                \
-    MACRO(fscanf, __VA_ARGS__)                                                 \
-    MACRO(fseek, __VA_ARGS__)                                                  \
-    MACRO(fputs, __VA_ARGS__)                                                  \
-    MACRO(fputc, __VA_ARGS__)                                                  \
-    MACRO(free, __VA_ARGS__)                                                   \
-    MACRO(fsync, __VA_ARGS__)                                                  \
-    MACRO(ftell, __VA_ARGS__)                                                  \
-    MACRO(fwrite, __VA_ARGS__)                                                 \
-    MACRO(fread, __VA_ARGS__)                                                  \
-    MACRO(fxstat, __VA_ARGS__)                                                 \
-    MACRO(fxstat64, __VA_ARGS__)                                               \
-    MACRO(getc, __VA_ARGS__)                                                   \
-    MACRO(getcwd, __VA_ARGS__)                                                 \
-    MACRO(getsockopt, __VA_ARGS__)                                             \
-    MACRO(gettimeofday, __VA_ARGS__)                                           \
-    MACRO(fgetc, __VA_ARGS__)                                                  \
-    MACRO(ungetc, __VA_ARGS__)                                                 \
-    MACRO(getline, __VA_ARGS__)                                                \
-    MACRO(getdelim, __VA_ARGS__)                                               \
-    MACRO(getpeername, __VA_ARGS__)                                            \
-    MACRO(getsockname, __VA_ARGS__)                                            \
-    MACRO(ioctl, __VA_ARGS__)                                                  \
-    MACRO(libc_memalign, __VA_ARGS__)                                          \
-    MACRO(lseek, __VA_ARGS__)                                                  \
-    MACRO(lseek64, __VA_ARGS__)                                                \
-    MACRO(llseek, __VA_ARGS__)                                                 \
-    MACRO(link, __VA_ARGS__)                                                   \
-    MACRO(symlink, __VA_ARGS__)                                                \
-    MACRO(listen, __VA_ARGS__)                                                 \
-    MACRO(localtime_r, __VA_ARGS__)                                            \
-    MACRO(utime, __VA_ARGS__)                                                  \
-    MACRO(utimes, __VA_ARGS__)                                                 \
-    MACRO(futimes, __VA_ARGS__)                                                \
-    MACRO(lutimes, __VA_ARGS__)                                                \
-    MACRO(clock_getres, __VA_ARGS__)                                           \
-    MACRO(clock_gettime, __VA_ARGS__)                                          \
-    MACRO(clock_settime, __VA_ARGS__)                                          \
-    MACRO(lxstat, __VA_ARGS__)                                                 \
-    MACRO(lxstat64, __VA_ARGS__)                                               \
-    MACRO(malloc, __VA_ARGS__)                                                 \
-    MACRO(mkdir, __VA_ARGS__)                                                  \
-    MACRO(mkstemp, __VA_ARGS__)                                                \
-    MACRO(mmap, __VA_ARGS__)                                                   \
-    MACRO(mmap64, __VA_ARGS__)                                                 \
-    MACRO(mremap, __VA_ARGS__)                                                 \
-    MACRO(munmap, __VA_ARGS__)                                                 \
-    MACRO(open, __VA_ARGS__)                                                   \
-    MACRO(open64, __VA_ARGS__)                                                 \
-    MACRO(openat, __VA_ARGS__)                                                 \
-    MACRO(opendir, __VA_ARGS__)                                                \
-    MACRO(pread, __VA_ARGS__)                                                  \
-    MACRO(preadv, __VA_ARGS__)                                                 \
-    MACRO(putc, __VA_ARGS__)                                                   \
-    MACRO(pwrite, __VA_ARGS__)                                                 \
-    MACRO(pwritev, __VA_ARGS__)                                                \
-    MACRO(pthread_detach, __VA_ARGS__)                                         \
-    MACRO(pthread_create, __VA_ARGS__)                                         \
-    MACRO(pthread_cond_broadcast, __VA_ARGS__)                                 \
-    MACRO(pthread_cond_signal, __VA_ARGS__)                                    \
-    MACRO(pthread_mutex_lock, __VA_ARGS__)                                     \
-    MACRO(pthread_mutex_trylock, __VA_ARGS__)                                  \
-    MACRO(pthread_mutex_unlock, __VA_ARGS__)                                   \
-    MACRO(pthread_cond_wait, __VA_ARGS__)                                      \
-    MACRO(pthread_cond_timedwait, __VA_ARGS__)                                 \
-    MACRO(pthread_cond_destroy, __VA_ARGS__)                                   \
-    MACRO(pthread_exit, __VA_ARGS__)                                           \
-    MACRO(pthread_join, __VA_ARGS__)                                           \
-    MACRO(pthread_kill, __VA_ARGS__)                                           \
-    MACRO(pthread_rwlock_unlock, __VA_ARGS__)                                  \
-    MACRO(pthread_rwlock_rdlock, __VA_ARGS__)                                  \
-    MACRO(pthread_rwlock_wrlock, __VA_ARGS__)                                  \
-    MACRO(rand, __VA_ARGS__)                                                   \
-    MACRO(read, __VA_ARGS__)                                                   \
-    MACRO(readv, __VA_ARGS__)                                                  \
-    MACRO(readdir, __VA_ARGS__)                                                \
-    MACRO(readdir_r, __VA_ARGS__)                                              \
-    MACRO(readlink, __VA_ARGS__)                                               \
-    MACRO(realloc, __VA_ARGS__)                                                \
-    MACRO(rename, __VA_ARGS__)                                                 \
-    MACRO(rewind, __VA_ARGS__)                                                 \
-    MACRO(rmdir, __VA_ARGS__)                                                  \
-    MACRO(select, __VA_ARGS__)                                                 \
-    MACRO(ppoll, __VA_ARGS__)                                                  \
-    MACRO(signal_handler, __VA_ARGS__)                                         \
-    MACRO(sigwait, __VA_ARGS__)                                                \
-    MACRO(setsockopt, __VA_ARGS__)                                             \
-    MACRO(srand, __VA_ARGS__)                                                  \
-    MACRO(socket, __VA_ARGS__)                                                 \
-    MACRO(socketpair, __VA_ARGS__)                                             \
-    MACRO(time, __VA_ARGS__)                                                   \
-    MACRO(tmpfile, __VA_ARGS__)                                                \
-    MACRO(truncate, __VA_ARGS__)                                               \
-    MACRO(ftruncate, __VA_ARGS__)                                              \
-    MACRO(truncate64, __VA_ARGS__)                                             \
-    MACRO(ftruncate64, __VA_ARGS__)                                            \
-    MACRO(unlink, __VA_ARGS__)                                                 \
-    MACRO(write, __VA_ARGS__)                                                  \
-    MACRO(writev, __VA_ARGS__)                                                 \
-    MACRO(xstat, __VA_ARGS__)                                                  \
-    MACRO(xstat64, __VA_ARGS__)                                                \
-    MACRO(user, __VA_ARGS__)                                                   \
-    MACRO(epoll_create, __VA_ARGS__)                                           \
-    MACRO(epoll_create1, __VA_ARGS__)                                          \
-    MACRO(epoll_ctl, __VA_ARGS__)                                              \
-    MACRO(epoll_wait, __VA_ARGS__)                                             \
-    MACRO(getpwnam_r, __VA_ARGS__)                                             \
-    MACRO(getpwuid_r, __VA_ARGS__)                                             \
-    MACRO(getgrnam_r, __VA_ARGS__)                                             \
-    MACRO(getgrgid_r, __VA_ARGS__)                                             \
-    MACRO(getaddrinfo, __VA_ARGS__)                                            \
-    MACRO(freeaddrinfo, __VA_ARGS__)                                           \
-    MACRO(getnameinfo, __VA_ARGS__)                                            \
-    MACRO(sendto, __VA_ARGS__)                                                 \
-    MACRO(sendmsg, __VA_ARGS__)                                                \
-    MACRO(recvfrom, __VA_ARGS__)                                               \
-    MACRO(recvmsg, __VA_ARGS__)                                                \
-    MACRO(wait4, __VA_ARGS__)                                                  \
-    MACRO(waitid, __VA_ARGS__)                                                 \
-    MACRO(flockfile, __VA_ARGS__)                                              \
-    MACRO(ftrylockfile, __VA_ARGS__)                                           \
-    MACRO(funlockfile, __VA_ARGS__)
 
+/*********************************************************/
+/*********************************************************/
 
-#define EVENT_CODE(x, ...) , x##_event
+#define EVENT_CODE(type, x, ...) , x##_event
 /* Event codes: */
 typedef enum {
   unknown_event = -1,
   empty_event = 0
-  FOREACH_NAME(EVENT_CODE)
+  FOREACH_RECORD_REPLAY_WRAPPER(EVENT_CODE)
 } event_code_t;
 /* end event codes */
 
-#define DECL_EVENT_SIZE(x, ...) \
+#define DECL_EVENT_SIZE(type, x, ...) \
   static const int log_event_##x##_size = sizeof(log_event_##x##_t);
 
 typedef struct {
@@ -796,8 +647,7 @@ typedef struct {
   // For fcntl():
   int fd;
   int cmd;
-  long arg_3_l;
-  struct flock *arg_3_f;
+  void *arg;
   struct flock ret_flock;
 } log_event_fcntl_t;
 
@@ -1540,7 +1390,7 @@ typedef struct {
 typedef log_event_flockfile_t log_event_ftrylockfile_t;
 typedef log_event_flockfile_t log_event_funlockfile_t;
 
-FOREACH_NAME(DECL_EVENT_SIZE)
+FOREACH_RECORD_REPLAY_WRAPPER(DECL_EVENT_SIZE)
 
 typedef struct {
   // FIXME:
@@ -1563,9 +1413,9 @@ typedef struct {
   log_entry_header_t header;
 
   union {
-#define DECL_LOG_EVENT_TYPE(x, ...) \
+#define DECL_LOG_EVENT_TYPE(type, x, ...) \
   log_event_##x##_t       log_event_##x;
-    FOREACH_NAME(DECL_LOG_EVENT_TYPE)
+    FOREACH_RECORD_REPLAY_WRAPPER(DECL_LOG_EVENT_TYPE)
   } event_data;
 } log_entry_t;
 
@@ -1610,43 +1460,6 @@ typedef struct {
   (GET_FIELD(e1, event, field) == GET_FIELD(e2, event, field))
 #define IS_EQUAL_FIELD_PTR(e1, e2, event, field) \
   (GET_FIELD_PTR(e1, event, field) == GET_FIELD_PTR(e2, event, field))
-
-#define IFNAME_GET_EVENT_SIZE(name, event, event_size)                  \
-  do {                                                                  \
-    if (event == name##_event)          \
-      event_size = log_event_##name##_size;                             \
-  } while(0);
-
-#define IFNAME_READ_ENTRY_FROM_LOG(name, source, entry)                    \
-  do {                                                                  \
-    if (GET_COMMON(entry,event) == name##_event) {           \
-      memcpy(&entry.event_data.log_event_##name, source,      \
-             log_event_##name##_size);                                     \
-    }                                                                   \
-  } while(0);
-
-#define IFNAME_WRITE_ENTRY_TO_LOG(name, dest, entry)                \
-  do {                                                                  \
-    if (GET_COMMON(entry,event) == name##_event) {               \
-      memcpy(dest, &entry.event_data.log_event_##name,              \
-             log_event_##name##_size);                                     \
-    }                                                                   \
-  } while(0);
-
-#define GET_EVENT_SIZE(event, event_size)                               \
-  do {                                                                  \
-    FOREACH_NAME(IFNAME_GET_EVENT_SIZE, event, event_size);             \
-  } while(0)
-
-#define READ_ENTRY_FROM_LOG(source, entry)                          \
-  do {                                                                  \
-    FOREACH_NAME(IFNAME_READ_ENTRY_FROM_LOG, source, entry);        \
-  } while(0)
-
-#define WRITE_ENTRY_TO_LOG(dest, entry)                      \
-  do {                                                                  \
-    FOREACH_NAME(IFNAME_WRITE_ENTRY_TO_LOG, dest, entry);    \
-  } while(0)
 
 /* Typedefs */
 // Type for predicate to check for a turn in the log.
@@ -1722,14 +1535,17 @@ LIB_PRIVATE void close_read_log();
    wrapper files. Couldn't we define these functions only in those
    files, instead of making them globally (within the library) visible
    here? */
-#define CREATE_ENTRY_FUNC(name, ...) \
+#define CREATE_ENTRY_FUNC(type, name, ...) \
   LIB_PRIVATE TURN_CHECK_P(name##_turn_check); \
   LIB_PRIVATE log_entry_t create_##name##_entry(clone_id_t clone_id, \
-                                                event_code_t event, ##__VA_ARGS__)
+                                                event_code_t event, ##__VA_ARGS__);
 /* ##__VA_ARGS__ is a GNU extension -- it means omit the variadic
    arguments if the list is empty. It will also then delete the
    extra comma. */
 
+FOREACH_RECORD_REPLAY_WRAPPER(CREATE_ENTRY_FUNC);
+
+#if 0
 CREATE_ENTRY_FUNC(accept, int sockfd,
                   struct sockaddr *addr, socklen_t *addrlen);
 CREATE_ENTRY_FUNC(accept4, int sockfd,
@@ -1922,6 +1738,8 @@ CREATE_ENTRY_FUNC(funlockfile, FILE *filehandle);
 
 /* Special case: user synchronized events. */
 CREATE_ENTRY_FUNC(user);
+#endif
+
 /* Special case: exec barrier (notice no clone id or event). */
 LIB_PRIVATE log_entry_t create_exec_barrier_entry();
 
