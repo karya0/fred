@@ -78,6 +78,12 @@ static inline bool isProcessGDB() {
 #define UNSET_IN_MMAP_WRAPPER() (in_mmap_wrapper = 0)
 #define IN_MMAP_WRAPPER         (in_mmap_wrapper == 1)
 
+#define SET_MMAP_NO_SYNC()   (mmap_no_sync = 1)
+#define UNSET_MMAP_NO_SYNC() (mmap_no_sync = 0)
+#define MMAP_NO_SYNC         (mmap_no_sync == 1)
+// Defined in dmtcpworker.cpp:
+LIB_PRIVATE extern __thread int mmap_no_sync;
+
 #define TURN_CHECK_P(name) int name(log_entry_t *e1, log_entry_t *e2)
 
 #define SYNC_TIMINGS
