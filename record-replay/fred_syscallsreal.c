@@ -250,6 +250,18 @@ int _real_utimes ( const char *filename, const struct timeval *times )
 }
 
 LIB_PRIVATE
+int _real_futimes(int fd, const struct timeval tv[2])
+{
+  REAL_FUNC_PASSTHROUGH_TYPED ( int, futimes ) ( fd, tv );
+}
+
+LIB_PRIVATE
+int _real_lutimes(const char *filename, const struct timeval tv[2])
+{
+  REAL_FUNC_PASSTHROUGH_TYPED ( int, lutimes ) ( filename, tv );
+}
+
+LIB_PRIVATE
 int _real_clock_getres(clockid_t clk_id, struct timespec *res)
 {
   REAL_FUNC_PASSTHROUGH(clock_getres) (clk_id, res);

@@ -136,6 +136,8 @@ LIB_PRIVATE extern __thread int thread_performing_dlopen_dlsym;
   MACRO(localtime_r)                        \
   MACRO(utime)                              \
   MACRO(utimes)                             \
+  MACRO(futimes)                            \
+  MACRO(lutimes)                            \
   MACRO(clock_getres)                       \
   MACRO(clock_gettime)                      \
   MACRO(clock_settime)                      \
@@ -359,6 +361,8 @@ LIB_PRIVATE extern __thread int thread_performing_dlopen_dlsym;
   struct tm * _real_localtime_r ( const time_t *timep, struct tm *result);
   int _real_utime(const char *filename, const struct utimbuf *times);
   int _real_utimes(const char *filename, const struct timeval *times);
+  int _real_futimes(int fd, const struct timeval tv[2]);
+  int _real_lutimes(const char *filename, const struct timeval tv[2]);
   int _real_clock_getres(clockid_t clk_id, struct timespec *res);
   int _real_clock_gettime(clockid_t clk_id, struct timespec *tp);
   int _real_clock_settime(clockid_t clk_id, const struct timespec *tp);
