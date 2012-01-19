@@ -49,7 +49,7 @@
   do {                                                                         \
     if (GET_COMMON_PTR(entry, event) == name##_event)                          \
       print_log_entry_##name(idx, entry);                                      \
-  } while(0)
+  } while(0);
 
 #define TOSTRING(name) #name
 
@@ -57,7 +57,7 @@
   do {                                                                         \
     if (e == name##_event)                                                     \
       event_type.assign(TOSTRING(name));                                       \
-  } while(0)
+  } while(0);
 
 #define EVENT_TO_STRING(event_type, e)                                         \
   do {                                                                         \

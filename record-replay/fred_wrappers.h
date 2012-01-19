@@ -375,9 +375,6 @@ LIB_PRIVATE extern __thread int thread_performing_dlopen_dlsym;
   int _real_execv ( const char *path, char *const argv[] );
   int _real_execvp ( const char *file, char *const argv[] );
   int _real_execvpe(const char *file, char *const argv[], char *const envp[]);
-// int _real_execl(const char *path, const char *arg, ...);
-// int _real_execlp(const char *file, const char *arg, ...);
-// int _real_execle(const char *path, const char *arg, ..., char * const envp[]);
   int _real_system ( const char * cmd );
 
   pid_t _real_fork();
@@ -394,12 +391,6 @@ LIB_PRIVATE extern __thread int thread_performing_dlopen_dlsym;
   int _real_fclose ( FILE *fp );
   int _real_fchdir ( int fd );
   void _real_exit ( int status );
-
-#ifndef RECORD_REPLAY
-//we no longer wrap dup in non record-replay mode
-#define _real_dup  dup
-#define _real_dup2 dup2
-#endif
 
   int _real_ptsname_r ( int fd, char * buf, size_t buflen );
   int _real_getpt ( void );
