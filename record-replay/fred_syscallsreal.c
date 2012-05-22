@@ -49,16 +49,6 @@
 #define open _libc_open
 #include <fcntl.h>
 #undef open
-typedef int ( *funcptr_t ) ();
-typedef pid_t ( *funcptr_pid_t ) ();
-typedef funcptr_t ( *signal_funcptr_t ) ();
-
-extern void *dmtcp_get_libc_dlsym_addr();
-extern void prepareFredWrappers();
-void * _real_dlsym ( void *handle, const char *symbol );
-
-static void *_real_func_addr[numTotalWrappers];
-static int _wrappers_initialized = 0;
 
 #define NOT_IMPLEMENTED()                                                   \
   do {                                                                      \
@@ -66,48 +56,6 @@ static int _wrappers_initialized = 0;
     _exit(0);                                                               \
   } while(0)
 
-#define GET_FUNC_ADDR_1(type, name, ...) \
-  _real_func_addr[ENUM(name)] = _real_dlsym(RTLD_NEXT, #name);
-
-#define GET_FUNC_ADDR_2(type, name, ...) \
-  _real_func_addr[ENUM(name)] = dlvsym(RTLD_NEXT, #name, "GLIBC_2.3.2");
-
-#define GET_FUNC_ADDR_3(type, name, ...) \
-  _real_func_addr[ENUM(name)] = _real_dlsym(RTLD_NEXT, "__" #name);
-
-
-static char wrapper_init_buf[1024];
-static trampoline_info_t pthread_getspecific_trampoline_info;
-void *_fred_pthread_getspecific(pthread_key_t key)
-{
-  if (_wrappers_initialized) {
-    fprintf(stderr, "DMTCP INTERNAL ERROR\n\n");
-    abort();
-  }
-  pthread_setspecific(key, wrapper_init_buf);
-  UNINSTALL_TRAMPOLINE(pthread_getspecific_trampoline_info);
-  return pthread_getspecific(key);
-}
-
-static _fred_PreparePthreadGetSpecific()
-{
-  dmtcp_setup_trampoline_by_addr(&pthread_getspecific,
-                                 (void*) &_fred_pthread_getspecific,
-                                 &pthread_getspecific_trampoline_info);
-}
-
-LIB_PRIVATE
-void initialize_wrappers()
-{
-  if (!_wrappers_initialized) {
-    _fred_PreparePthreadGetSpecific();
-    FOREACH_RECORD_REPLAY_WRAPPER_1(GET_FUNC_ADDR_1);
-    FOREACH_RECORD_REPLAY_WRAPPER_2(GET_FUNC_ADDR_2);
-    FOREACH_RECORD_REPLAY_WRAPPER_3(GET_FUNC_ADDR_3);
-    FOREACH_NON_RECORD_REPLAY_WRAPPER(GET_FUNC_ADDR_1);
-    _wrappers_initialized = 1;
-  }
-}
 
 //////////////////////////
 //// FIRST DEFINE REAL VERSIONS OF NEEDED FUNCTIONS
@@ -117,49 +65,17 @@ void initialize_wrappers()
 #define REAL_FUNC_PASSTHROUGH_TYPED(type,name) \
   static type (*fn)() = NULL; \
   if (fn == NULL) { \
-    if (_real_func_addr[ENUM(name)] == NULL) prepareFredWrappers(); \
-    fn = _real_func_addr[ENUM(name)]; \
-    if (fn == NULL) { \
-      fprintf(stderr, "*** DMTCP: Error: lookup failed for %s.\n" \
-                      "           The symbol wasn't found in current library" \
-                      " loading sequence.\n" \
-                      "    Aborting.\n", #name); \
-      abort(); \
-    } \
+    fn = get_real_func_addr(name##_event, #name); \
   } \
   return (*fn)
 
 #define REAL_FUNC_PASSTHROUGH_VOID(name) \
   static void (*fn)() = NULL; \
   if (fn == NULL) { \
-    if (_real_func_addr[ENUM(name)] == NULL) prepareFredWrappers(); \
-    fn = _real_func_addr[ENUM(name)]; \
-    if (fn == NULL) { \
-      fprintf(stderr, "*** DMTCP: Error: lookup failed for %s.\n" \
-                      "           The symbol wasn't found in current library" \
-                      " loading sequence.\n" \
-                      "    Aborting.\n", #name); \
-      abort(); \
-    } \
+    fn = get_real_func_addr(name##_event, #name); \
   } \
   (*fn)
 
-
-LIB_PRIVATE
-void *_real_dlsym ( void *handle, const char *symbol ) {
-  typedef void* ( *fncptr ) (void *handle, const char *symbol);
-  fncptr dlsym_fptr = NULL;
-
-  if (dlsym_fptr == 0) {
-    dlsym_fptr = dmtcp_get_libc_dlsym_addr();
-    if (dlsym_fptr == NULL) {
-      fprintf(stderr, "DMTCP: Internal Error: Not Reached\n");
-      abort();
-    }
-  }
-
-  return (*dlsym_fptr) ( handle, symbol );
-}
 
 LIB_PRIVATE
 int _real_pthread_mutex_lock(pthread_mutex_t *mutex) {
