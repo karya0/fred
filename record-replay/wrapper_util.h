@@ -23,8 +23,8 @@
  * to make any changes to this file.
  */
 
-#ifndef WRAPPER_UTIL2_H
-#define WRAPPER_UTIL2_H
+#ifndef WRAPPER_UTIL_H
+#define WRAPPER_UTIL_H
 
 #include "fred_wrappers.h"
 #include "wrapper_util.h"

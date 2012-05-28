@@ -881,8 +881,8 @@ def get_struct_def(wrapper):
 
 def create_wrapper_util_h():
     header = """\
-#ifndef WRAPPER_UTIL2_H
-#define WRAPPER_UTIL2_H
+#ifndef WRAPPER_UTIL_H
+#define WRAPPER_UTIL_H
 
 #include "fred_wrappers.h"
 #include "wrapper_util.h"
@@ -974,7 +974,7 @@ size_t getLogEventSize(const log_entry_t *entry);
 
 def create_wrapper_util_cpp():
     header = """\
-#include "wrapper_util2.h"
+#include "wrapper_util.h"
 #include "synchronizationlogging.h"
 """
     footer = ''
