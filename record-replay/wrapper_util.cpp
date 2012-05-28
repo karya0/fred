@@ -148,6 +148,10 @@ static size_t log_event_size[numTotalWrappers] = {
   sizeof(log_event_fputc_t),
   sizeof(log_event_fsync_t),
   sizeof(log_event_ftell_t),
+  sizeof(log_event_fgetpos_t),
+  sizeof(log_event_fgetpos64_t),
+  sizeof(log_event_fsetpos_t),
+  sizeof(log_event_fsetpos64_t),
   sizeof(log_event_fwrite_t),
   sizeof(log_event_fread_t),
   sizeof(log_event_getc_t),
@@ -1477,6 +1481,46 @@ log_entry_t create_ftell_entry(clone_id_t clone_id, event_code_t event,
   return e;
 }
 
+log_entry_t create_fgetpos_entry(clone_id_t clone_id, event_code_t event,
+                                 FILE* stream, fpos_t* pos)
+{
+  log_entry_t e = EMPTY_LOG_ENTRY;
+  setupCommonFields(&e, clone_id, event);
+  SET_FIELD(e, fgetpos, stream);
+  SET_FIELD(e, fgetpos, pos);
+  return e;
+}
+
+log_entry_t create_fgetpos64_entry(clone_id_t clone_id, event_code_t event,
+                                   FILE* stream, fpos64_t* pos)
+{
+  log_entry_t e = EMPTY_LOG_ENTRY;
+  setupCommonFields(&e, clone_id, event);
+  SET_FIELD(e, fgetpos64, stream);
+  SET_FIELD(e, fgetpos64, pos);
+  return e;
+}
+
+log_entry_t create_fsetpos_entry(clone_id_t clone_id, event_code_t event,
+                                 FILE* stream, fpos_t* pos)
+{
+  log_entry_t e = EMPTY_LOG_ENTRY;
+  setupCommonFields(&e, clone_id, event);
+  SET_FIELD(e, fsetpos, stream);
+  SET_FIELD(e, fsetpos, pos);
+  return e;
+}
+
+log_entry_t create_fsetpos64_entry(clone_id_t clone_id, event_code_t event,
+                                   FILE* stream, fpos64_t* pos)
+{
+  log_entry_t e = EMPTY_LOG_ENTRY;
+  setupCommonFields(&e, clone_id, event);
+  SET_FIELD(e, fsetpos64, stream);
+  SET_FIELD(e, fsetpos64, pos);
+  return e;
+}
+
 log_entry_t create_fwrite_entry(clone_id_t clone_id, event_code_t event,
                                 const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
@@ -2755,6 +2799,34 @@ int ftell_turn_check(log_entry_t *e1, log_entry_t *e2)
 {
   return base_turn_check(e1,e2)
     && ARE_FIELDS_EQUAL_PTR (e1, e2, ftell, stream);
+}
+
+int fgetpos_turn_check(log_entry_t *e1, log_entry_t *e2)
+{
+  return base_turn_check(e1,e2)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fgetpos, stream)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fgetpos, pos);
+}
+
+int fgetpos64_turn_check(log_entry_t *e1, log_entry_t *e2)
+{
+  return base_turn_check(e1,e2)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fgetpos64, stream)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fgetpos64, pos);
+}
+
+int fsetpos_turn_check(log_entry_t *e1, log_entry_t *e2)
+{
+  return base_turn_check(e1,e2)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fsetpos, stream)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fsetpos, pos);
+}
+
+int fsetpos64_turn_check(log_entry_t *e1, log_entry_t *e2)
+{
+  return base_turn_check(e1,e2)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fsetpos64, stream)
+    && ARE_FIELDS_EQUAL_PTR (e1, e2, fsetpos64, pos);
 }
 
 int fwrite_turn_check(log_entry_t *e1, log_entry_t *e2)

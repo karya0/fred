@@ -600,6 +600,27 @@ long _real_ftell(FILE *stream) {
 }
 
 LIB_PRIVATE
+int _real_fgetpos(FILE *stream, fpos_t *pos) {
+  REAL_FUNC_PASSTHROUGH ( fgetpos ) ( stream, pos );
+ }
+
+LIB_PRIVATE
+int _real_fgetpos64(FILE *stream, fpos64_t *pos) {
+  REAL_FUNC_PASSTHROUGH ( fgetpos64 ) ( stream, pos );
+}
+
+LIB_PRIVATE
+int _real_fsetpos(FILE *stream, fpos_t *pos) {
+  REAL_FUNC_PASSTHROUGH ( fsetpos ) ( stream, pos );
+}
+
+LIB_PRIVATE
+int _real_fsetpos64(FILE *stream, fpos64_t *pos) {
+  REAL_FUNC_PASSTHROUGH ( fsetpos64 ) ( stream, pos );
+}
+
+
+LIB_PRIVATE
 int _real_fputs(const char *s, FILE *stream) {
   REAL_FUNC_PASSTHROUGH_TYPED ( int, fputs ) ( s, stream );
 }

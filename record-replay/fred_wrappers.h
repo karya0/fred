@@ -192,6 +192,10 @@ extern "C"
     fputc_event,
     fsync_event,
     ftell_event,
+    fgetpos_event,
+    fgetpos64_event,
+    fsetpos_event,
+    fsetpos64_event,
     fwrite_event,
     fread_event,
     getc_event,
@@ -352,6 +356,10 @@ extern "C"
   int _real_fputc(int c, FILE* stream);
   int _real_fsync(int fd);
   long _real_ftell(FILE* stream);
+  int _real_fgetpos(FILE* stream, fpos_t* pos);
+  int _real_fgetpos64(FILE* stream, fpos64_t* pos);
+  int _real_fsetpos(FILE* stream, fpos_t* pos);
+  int _real_fsetpos64(FILE* stream, fpos64_t* pos);
   size_t _real_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
   size_t _real_fread(void* ptr, size_t size, size_t nmemb, FILE* stream);
   int _real_getc(FILE* stream);

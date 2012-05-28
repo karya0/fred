@@ -149,6 +149,10 @@ static const char *log_event_str[] = {
   "fputc",
   "fsync",
   "ftell",
+  "fgetpos",
+  "fgetpos64",
+  "fsetpos",
+  "fsetpos64",
   "fwrite",
   "fread",
   "getc",
@@ -1101,6 +1105,34 @@ void print_log_entry_ftell(int idx, log_entry_t *entry) {
          GET_FIELD_PTR(entry, ftell, stream));
 }
 
+void print_log_entry_fgetpos(int idx, log_entry_t *entry) {
+  print_log_entry_common(idx, entry);
+  printf("stream=pos=\n",
+         GET_FIELD_PTR(entry, fgetpos, stream),
+         GET_FIELD_PTR(entry, fgetpos, pos));
+}
+
+void print_log_entry_fgetpos64(int idx, log_entry_t *entry) {
+  print_log_entry_common(idx, entry);
+  printf("stream=pos=\n",
+         GET_FIELD_PTR(entry, fgetpos64, stream),
+         GET_FIELD_PTR(entry, fgetpos64, pos));
+}
+
+void print_log_entry_fsetpos(int idx, log_entry_t *entry) {
+  print_log_entry_common(idx, entry);
+  printf("stream=pos=\n",
+         GET_FIELD_PTR(entry, fsetpos, stream),
+         GET_FIELD_PTR(entry, fsetpos, pos));
+}
+
+void print_log_entry_fsetpos64(int idx, log_entry_t *entry) {
+  print_log_entry_common(idx, entry);
+  printf("stream=pos=\n",
+         GET_FIELD_PTR(entry, fsetpos64, stream),
+         GET_FIELD_PTR(entry, fsetpos64, pos));
+}
+
 void print_log_entry_fwrite(int idx, log_entry_t *entry) {
   print_log_entry_common(idx, entry);
   printf("ptr=size=nmemb=stream=\n",
@@ -1599,6 +1631,14 @@ switch (entry->header.event) {
     case fsync_event: print_log_entry_fsync(idx, entry); break;
 
     case ftell_event: print_log_entry_ftell(idx, entry); break;
+
+    case fgetpos_event: print_log_entry_fgetpos(idx, entry); break;
+
+    case fgetpos64_event: print_log_entry_fgetpos64(idx, entry); break;
+
+    case fsetpos_event: print_log_entry_fsetpos(idx, entry); break;
+
+    case fsetpos64_event: print_log_entry_fsetpos64(idx, entry); break;
 
     case fwrite_event: print_log_entry_fwrite(idx, entry); break;
 

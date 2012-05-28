@@ -784,6 +784,26 @@ typedef struct {
 } log_event_ftell_t;
 
 typedef struct {
+  FILE* stream;
+  fpos_t* pos;
+} log_event_fgetpos_t;
+
+typedef struct {
+  FILE* stream;
+  fpos64_t* pos;
+} log_event_fgetpos64_t;
+
+typedef struct {
+  FILE* stream;
+  fpos_t* pos;
+} log_event_fsetpos_t;
+
+typedef struct {
+  FILE* stream;
+  fpos64_t* pos;
+} log_event_fsetpos64_t;
+
+typedef struct {
   const void* ptr;
   size_t size;
   size_t nmemb;
@@ -1117,6 +1137,10 @@ union log_entry_data {
   log_event_fputc_t log_event_fputc;
   log_event_fsync_t log_event_fsync;
   log_event_ftell_t log_event_ftell;
+  log_event_fgetpos_t log_event_fgetpos;
+  log_event_fgetpos64_t log_event_fgetpos64;
+  log_event_fsetpos_t log_event_fsetpos;
+  log_event_fsetpos64_t log_event_fsetpos64;
   log_event_fwrite_t log_event_fwrite;
   log_event_fread_t log_event_fread;
   log_event_getc_t log_event_getc;
@@ -1300,6 +1324,10 @@ int fputs_turn_check(log_entry_t *e1, log_entry_t *e2);
 int fputc_turn_check(log_entry_t *e1, log_entry_t *e2);
 int fsync_turn_check(log_entry_t *e1, log_entry_t *e2);
 int ftell_turn_check(log_entry_t *e1, log_entry_t *e2);
+int fgetpos_turn_check(log_entry_t *e1, log_entry_t *e2);
+int fgetpos64_turn_check(log_entry_t *e1, log_entry_t *e2);
+int fsetpos_turn_check(log_entry_t *e1, log_entry_t *e2);
+int fsetpos64_turn_check(log_entry_t *e1, log_entry_t *e2);
 int fwrite_turn_check(log_entry_t *e1, log_entry_t *e2);
 int fread_turn_check(log_entry_t *e1, log_entry_t *e2);
 int getc_turn_check(log_entry_t *e1, log_entry_t *e2);
@@ -1577,6 +1605,14 @@ log_entry_t create_fsync_entry(clone_id_t clone_id, event_code_t event,
                                int fd);
 log_entry_t create_ftell_entry(clone_id_t clone_id, event_code_t event,
                                FILE* stream);
+log_entry_t create_fgetpos_entry(clone_id_t clone_id, event_code_t event,
+                                 FILE* stream, fpos_t* pos);
+log_entry_t create_fgetpos64_entry(clone_id_t clone_id, event_code_t event,
+                                   FILE* stream, fpos64_t* pos);
+log_entry_t create_fsetpos_entry(clone_id_t clone_id, event_code_t event,
+                                 FILE* stream, fpos_t* pos);
+log_entry_t create_fsetpos64_entry(clone_id_t clone_id, event_code_t event,
+                                   FILE* stream, fpos64_t* pos);
 log_entry_t create_fwrite_entry(clone_id_t clone_id, event_code_t event,
                                 const void* ptr, size_t size, size_t nmemb, FILE* stream);
 log_entry_t create_fread_entry(clone_id_t clone_id, event_code_t event,

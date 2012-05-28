@@ -413,6 +413,18 @@ fstreamWrappers = [
 
   ('long', 'ftell', [('FILE*', 'stream')]),
 
+  ('int', 'fgetpos', [('FILE*', 'stream'),
+                      ('fpos_t*', 'pos')]),
+
+  ('int', 'fgetpos64', [('FILE*', 'stream'),
+                        ('fpos64_t*', 'pos')]),
+
+  ('int', 'fsetpos', [('FILE*', 'stream'),
+                      ('fpos_t*', 'pos')]),
+
+  ('int', 'fsetpos64', [('FILE*', 'stream'),
+                        ('fpos64_t*', 'pos')]),
+
   ('size_t', 'fwrite', [('const void*', 'ptr'),
                         ('size_t', 'size'),
                         ('size_t', 'nmemb'),

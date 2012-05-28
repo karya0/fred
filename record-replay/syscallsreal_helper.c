@@ -175,6 +175,10 @@ static void fred_get_libc_func_addr() {
   _real_func_addr[fputc_event] = _real_dlsym(RTLD_NEXT, "fputc");
   _real_func_addr[fsync_event] = _real_dlsym(RTLD_NEXT, "fsync");
   _real_func_addr[ftell_event] = _real_dlsym(RTLD_NEXT, "ftell");
+  _real_func_addr[fgetpos_event] = _real_dlsym(RTLD_NEXT, "fgetpos");
+  _real_func_addr[fgetpos64_event] = _real_dlsym(RTLD_NEXT, "fgetpos64");
+  _real_func_addr[fsetpos_event] = _real_dlsym(RTLD_NEXT, "fsetpos");
+  _real_func_addr[fsetpos64_event] = _real_dlsym(RTLD_NEXT, "fsetpos64");
   _real_func_addr[fwrite_event] = _real_dlsym(RTLD_NEXT, "fwrite");
   _real_func_addr[fread_event] = _real_dlsym(RTLD_NEXT, "fread");
   _real_func_addr[getc_event] = _real_dlsym(RTLD_NEXT, "getc");
