@@ -751,7 +751,7 @@ class WrapperInfo:
         body += '  setupCommonFields(&e, clone_id, event);\n'
 
         for arg in self.args:
-            if not arg.dont_save:
+            if not arg.dont_save():
                 body += '  SET_FIELD(e, %s, %s);\n' % (self._name, arg.name())
 
         body += '  return e;\n}\n'
@@ -790,8 +790,8 @@ class WrapperInfo:
         fmt_str = ''
         arg_list = ''
         for arg in self.args:
-            if arg.dont_save == False:
-                fmt_str += ' %s=%s' % (arg.name(), arg.ret_type.format_str())
+            if arg.dont_save() == False:
+                fmt_str += ' %s=%s' % (arg.name(), arg.ret_type().format_str())
                 arg_list += ',\n         GET_FIELD_PTR(entry, %s, %s)' \
                          % (self._name, arg.name())
         body = '  {\n  printf("%s\\n" %s);\n}\n' % (fmt_str, arg_list)
