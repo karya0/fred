@@ -56,6 +56,72 @@
     _exit(0);                                                               \
   } while(0)
 
+LIB_PRIVATE void *get_real_func_addr(event_code_t e, const char *name);
+LIB_PRIVATE void fred_get_libc_func_addr();
+
+static int _wrappers_initialized = 0;
+LIB_PRIVATE void *_real_func_addr[numTotalWrappers];
+
+static char wrapper_init_buf[1024];
+static trampoline_info_t pthread_getspecific_trampoline_info;
+void *_fred_pthread_getspecific(pthread_key_t key)
+{
+  if (_wrappers_initialized) {
+    fprintf(stderr, "DMTCP INTERNAL ERROR\n\n");
+    abort();
+  }
+  pthread_setspecific(key, wrapper_init_buf);
+  UNINSTALL_TRAMPOLINE(pthread_getspecific_trampoline_info);
+  return pthread_getspecific(key);
+}
+
+static void _fred_PreparePthreadGetSpecific()
+{
+  dmtcp_setup_trampoline_by_addr(&pthread_getspecific,
+                                 (void*) &_fred_pthread_getspecific,
+                                 &pthread_getspecific_trampoline_info);
+}
+
+LIB_PRIVATE
+void initialize_wrappers()
+{
+  if (!_wrappers_initialized) {
+    _fred_PreparePthreadGetSpecific();
+    fred_get_libc_func_addr();
+    _wrappers_initialized = 1;
+  }
+}
+
+LIB_PRIVATE
+void *get_real_func_addr(event_code_t e, const char *name) {
+  if (_real_func_addr[e] == NULL) {
+    prepareFredWrappers();
+  }
+  if (_real_func_addr[e] == NULL) {
+    fprintf(stderr, "*** DMTCP: Error: lookup failed for %s.\n"
+                    "           The symbol wasn't found in current library"
+                    " loading sequence.\n"
+                    "    Aborting.\n", name);
+    abort();
+  }
+  return _real_func_addr[e];
+}
+
+LIB_PRIVATE
+void *_real_dlsym(void *handle, const char *symbol) {
+  typedef void* ( *fncptr ) (void *handle, const char *symbol);
+  fncptr dlsym_fptr = NULL;
+
+  if (dlsym_fptr == 0) {
+    dlsym_fptr = dmtcp_get_libc_dlsym_addr();
+    if (dlsym_fptr == NULL) {
+      fprintf(stderr, "DMTCP: Internal Error: Not Reached\n");
+      abort();
+    }
+  }
+
+  return (*dlsym_fptr) ( handle, symbol );
+}
 
 //////////////////////////
 //// FIRST DEFINE REAL VERSIONS OF NEEDED FUNCTIONS
@@ -610,12 +676,12 @@ int _real_fgetpos64(FILE *stream, fpos64_t *pos) {
 }
 
 LIB_PRIVATE
-int _real_fsetpos(FILE *stream, fpos_t *pos) {
+int _real_fsetpos(FILE *stream, const fpos_t *pos) {
   REAL_FUNC_PASSTHROUGH ( fsetpos ) ( stream, pos );
 }
 
 LIB_PRIVATE
-int _real_fsetpos64(FILE *stream, fpos64_t *pos) {
+int _real_fsetpos64(FILE *stream, const fpos64_t *pos) {
   REAL_FUNC_PASSTHROUGH ( fsetpos64 ) ( stream, pos );
 }
 

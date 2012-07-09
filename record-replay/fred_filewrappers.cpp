@@ -420,20 +420,20 @@ extern "C" int __isoc99_fscanf (FILE *stream, const char *format, ...)
   va_list arg;
   va_start (arg, format);
 
-  WRAPPER_HEADER(int, fscanf, vfscanf, stream, format, arg);
+  WRAPPER_HEADER(int, vfscanf, vfscanf, stream, format, arg);
 
   if (SYNC_IS_REPLAY) {
-    WRAPPER_REPLAY_START(fscanf);
+    WRAPPER_REPLAY_START(vfscanf);
     if (retval != EOF) {
       if (__builtin_expect(read_data_fd == -1, 0)) {
         read_data_fd = _real_open(RECORD_READ_DATA_LOG_PATH, O_RDONLY, 0);
       }
       JASSERT ( read_data_fd != -1 );
-      lseek(read_data_fd, GET_FIELD(my_entry,fscanf,data_offset), SEEK_SET);
+      lseek(read_data_fd, GET_FIELD(my_entry,vfscanf,data_offset), SEEK_SET);
       read_data_from_log_into_va_list (arg, format);
       va_end(arg);
     }
-    WRAPPER_REPLAY_END(fscanf);
+    WRAPPER_REPLAY_END(vfscanf);
   } else if (SYNC_IS_RECORD) {
     errno = 0;
     retval = vfscanf(stream, format, arg);
@@ -441,11 +441,11 @@ extern "C" int __isoc99_fscanf (FILE *stream, const char *format, ...)
     va_end (arg);
     if (retval != EOF) {
       _real_pthread_mutex_lock(&read_data_mutex);
-      SET_FIELD2(my_entry, fscanf, data_offset, read_log_pos);
+      SET_FIELD2(my_entry, vfscanf, data_offset, read_log_pos);
       va_start (arg, format);
       int bytes = parse_va_list_and_log(arg, format);
       va_end (arg);
-      SET_FIELD(my_entry, fscanf, bytes);
+      SET_FIELD(my_entry, vfscanf, bytes);
       _real_pthread_mutex_unlock(&read_data_mutex);
     }
     errno = saved_errno;
@@ -505,12 +505,12 @@ extern "C" int __fprintf_chk (FILE *stream, int flag, const char *format, ...)
 {
   va_list arg;
   va_start (arg, format);
-  WRAPPER_HEADER(int, fprintf, _fprintf, stream, format, arg);
+  WRAPPER_HEADER(int, vfprintf, _fprintf, stream, format, arg);
 
   if (SYNC_IS_REPLAY) {
     // XXX: FIXME: why are we calling WRAPPER_REPLAY instead of
     // WRAPPER_REPLAY_START and _END?
-    WRAPPER_REPLAY(fprintf);
+    WRAPPER_REPLAY(vfprintf);
     /* If we're writing to stdout, we want to see the data to screen.
      * Thus execute the real system call. */
     // XXX We can't do this so easily. If we make the _real_printf call here,
@@ -534,10 +534,10 @@ extern "C" int fprintf (FILE *stream, const char *format, ...)
 {
   va_list arg;
   va_start (arg, format);
-  WRAPPER_HEADER(int, fprintf, _fprintf, stream, format, arg);
+  WRAPPER_HEADER(int, vfprintf, _fprintf, stream, format, arg);
 
   if (SYNC_IS_REPLAY) {
-    WRAPPER_REPLAY_START(fprintf);
+    WRAPPER_REPLAY_START(vfprintf);
     /* If we're writing to stdout, we want to see the data to screen.
      * Thus execute the real system call. */
     // XXX We can't do this so easily. If we make the _real_printf call here,
@@ -547,7 +547,7 @@ extern "C" int fprintf (FILE *stream, const char *format, ...)
       retval = _fprintf(stream, format, arg);
       }*/
     retval = (int)(unsigned long)GET_COMMON(my_entry, retval);
-    WRAPPER_REPLAY_END(fprintf);
+    WRAPPER_REPLAY_END(vfprintf);
   } else if (SYNC_IS_RECORD) {
     dmtcp::ThreadInfo::setOptionalEvent();
     retval = _fprintf(stream, format, arg);
@@ -1578,7 +1578,7 @@ extern "C" pid_t wait4(pid_t pid, __WAIT_STATUS status, int options,
   } else if (SYNC_IS_RECORD) {
     pid_t retval = _real_wait4(pid, status, options, rusage);
     if (retval != -1 && status != NULL) {
-      SET_FIELD2(my_entry, wait4, ret_status, (void*) *(int*)status);
+      SET_FIELD2(my_entry, wait4, ret_status, (void*) (unsigned long) *(int*)status);
     }
     if (retval != -1 && rusage != NULL) {
       SET_FIELD2(my_entry, wait4, ret_rusage, *rusage);

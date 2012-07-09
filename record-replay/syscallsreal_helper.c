@@ -23,37 +23,11 @@
  * to make any changes to this file.
  */
 
-
 #include "fred_wrappers.h"
-#include "trampolines.h"
-#include <dlfcn.h>
 
 void * _real_dlsym ( void *handle, const char *symbol );
-
-static void *_real_func_addr[numTotalWrappers];
-static int _wrappers_initialized = 0;
-
-static char wrapper_init_buf[1024];
-static trampoline_info_t pthread_getspecific_trampoline_info;
-void *_fred_pthread_getspecific(pthread_key_t key)
-{
-  if (_wrappers_initialized) {
-    fprintf(stderr, "DMTCP INTERNAL ERROR\n\n");
-    abort();
-  }
-  pthread_setspecific(key, wrapper_init_buf);
-  UNINSTALL_TRAMPOLINE(pthread_getspecific_trampoline_info);
-  return pthread_getspecific(key);
-}
-
-static void _fred_PreparePthreadGetSpecific()
-{
-  dmtcp_setup_trampoline_by_addr(&pthread_getspecific,
-                                 (void*) &_fred_pthread_getspecific,
-                                 &pthread_getspecific_trampoline_info);
-}
-
-static void fred_get_libc_func_addr() {
+extern LIB_PRIVATE void *_real_func_addr[];
+LIB_PRIVATE void fred_get_libc_func_addr() {
   _real_func_addr[empty_event] = _real_dlsym(RTLD_NEXT, "empty");
   _real_func_addr[accept_event] = _real_dlsym(RTLD_NEXT, "accept");
   _real_func_addr[accept4_event] = _real_dlsym(RTLD_NEXT, "accept4");
@@ -197,7 +171,6 @@ static void fred_get_libc_func_addr() {
   _real_func_addr[fdopendir_event] = _real_dlsym(RTLD_NEXT, "fdopendir");
   _real_func_addr[readdir_event] = _real_dlsym(RTLD_NEXT, "readdir");
   _real_func_addr[readdir_r_event] = _real_dlsym(RTLD_NEXT, "readdir_r");
-  _real_func_addr[syscall_event] = _real_dlsym(RTLD_NEXT, "syscall");
   _real_func_addr[pthread_cond_broadcast_event] = dlvsym(RTLD_NEXT, "pthread_cond_broadcast", "GLIBC_2.3.2");
   _real_func_addr[pthread_cond_signal_event] = dlvsym(RTLD_NEXT, "pthread_cond_signal", "GLIBC_2.3.2");
   _real_func_addr[pthread_cond_wait_event] = dlvsym(RTLD_NEXT, "pthread_cond_wait", "GLIBC_2.3.2");
@@ -210,46 +183,10 @@ static void fred_get_libc_func_addr() {
   _real_func_addr[xstat_event] = _real_dlsym(RTLD_NEXT, "__xstat");
   _real_func_addr[xstat64_event] = _real_dlsym(RTLD_NEXT, "__xstat64");
   _real_func_addr[libc_memalign_event] = _real_dlsym(RTLD_NEXT, "__libc_memalign");
+  _real_func_addr[vfprintf_event] = _real_dlsym(RTLD_NEXT, "vfprintf");
+  _real_func_addr[vfscanf_event] = _real_dlsym(RTLD_NEXT, "vfscanf");
+  _real_func_addr[exec_barrier_event] = _real_dlsym(RTLD_NEXT, "exec_barrier");
+  _real_func_addr[signal_handler_event] = _real_dlsym(RTLD_NEXT, "signal_handler");
+  _real_func_addr[user_event] = _real_dlsym(RTLD_NEXT, "user");
+  _real_func_addr[syscall_event] = _real_dlsym(RTLD_NEXT, "syscall");
 }
-
-LIB_PRIVATE
-void initialize_wrappers()
-{
-  if (!_wrappers_initialized) {
-    _fred_PreparePthreadGetSpecific();
-    fred_get_libc_func_addr();
-    _wrappers_initialized = 1;
-  }
-}
-
-LIB_PRIVATE
-void *get_real_func_addr(event_code_t e, const char *name) {
-  if (_real_func_addr[e] == NULL) {
-    prepareFredWrappers();
-  }
-  if (_real_func_addr[e] == NULL) {
-    fprintf(stderr, "*** DMTCP: Error: lookup failed for %s.\n"
-                    "           The symbol wasn't found in current library"
-                    " loading sequence.\n"
-                    "    Aborting.\n", name);
-    abort();
-  }
-  return _real_func_addr[e];
-}
-
-LIB_PRIVATE
-void *_real_dlsym(void *handle, const char *symbol) {
-  typedef void* ( *fncptr ) (void *handle, const char *symbol);
-  fncptr dlsym_fptr = NULL;
-
-  if (dlsym_fptr == 0) {
-    dlsym_fptr = dmtcp_get_libc_dlsym_addr();
-    if (dlsym_fptr == NULL) {
-      fprintf(stderr, "DMTCP: Internal Error: Not Reached\n");
-      abort();
-    }
-  }
-
-  return (*dlsym_fptr) ( handle, symbol );
-}
-

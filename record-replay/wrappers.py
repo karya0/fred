@@ -74,7 +74,8 @@ miscWrappers = [
   ('int', 'fcntl', [('int', 'fd'),
                     ('int', 'cmd'),
                     ('void*', 'arg')],
-                   ('extra', 'struct flock ret_flock')),
+                   ('extra', 'struct flock ret_flock'),
+                   ('opt', 'decl_fred_xxx_fn')),
   ('int', 'fchdir', [('int', 'fd')]),
   ('int', 'fdatasync', [('int', 'fd')]),
   ('char*', 'getcwd', [('char*', 'buf'),
@@ -82,7 +83,7 @@ miscWrappers = [
                       ('opt', 'decl_data_offset')),
   ('int', 'gettimeofday', [('struct timeval*', 'tv', '__save_retval'),
                            ('struct timezone*', 'tz', '__save_retval')],
-                          ('opt', 'decl_retval')),
+                          ('opt', 'decl_fred_xxx_fn')),
   ('int', 'getpeername', [('int', 'sockfd'),
                           ('struct sockaddr*', 'addr', '__save_retval'),
                           ('socklen_t*', 'addrlen', '__save_retval')]),
@@ -113,7 +114,8 @@ miscWrappers = [
                             ('const struct timespec*', 'tp')]),
   ('off_t', 'lseek', [('int', 'fd'),
                       ('off_t', 'offset'),
-                      ('int', 'whence')]),
+                      ('int', 'whence')],
+                      ('opt', 'decl_fred_xxx_fn')),
   ('off64_t', 'lseek64', [('int', 'fd'),
                           ('off64_t', 'offset'),
                           ('int', 'whence')]),
@@ -133,7 +135,8 @@ miscWrappers = [
                      ('int', 'flags'),
                      ('int', 'fd'),
                      ('off_t', 'offset')],
-                    ('opt', 'decl_data_offset')),
+                    ('opt', 'decl_data_offset'),
+                    ('opt', 'decl_fred_xxx_fn')),
   ('void*', 'mmap64', [('void*', 'addr'),
                        ('size_t', 'length'),
                        ('int', 'prot'),
@@ -142,15 +145,18 @@ miscWrappers = [
                        ('off64_t', 'offset')],
                       ('opt', 'decl_data_offset')),
   ('int', 'munmap', [('void*', 'addr'),
-                     ('size_t', 'length')]),
+                     ('size_t', 'length')],
+                     ('opt', 'decl_fred_xxx_fn')),
   ('void*', 'mremap', [('void*', 'old_address'),
                        ('size_t', 'old_size'),
                        ('size_t', 'new_size'),
                        ('int', 'flags'),
-                       ('void*', 'new_address')]),
+                       ('void*', 'new_address')],
+                       ('opt', 'decl_fred_xxx_fn')),
   ('int', 'open', [('const char*', 'pathname'),
                    ('int', 'flags'),
-                   ('mode_t', 'mode')]),
+                   ('mode_t', 'mode')],
+                  ('opt', 'decl_fred_xxx_fn')),
   ('int', 'open64', [('const char*', 'pathname'),
                      ('int', 'flags'),
                      ('mode_t', 'mode')]),
@@ -197,7 +203,8 @@ miscWrappers = [
   ('ssize_t', 'read', [('int', 'fd'),
                        ('void*', 'buf'),
                        ('size_t', 'count')],
-                      ('opt', 'decl_data_offset')),
+                      ('opt', 'decl_data_offset'),
+                      ('opt', 'decl_fred_xxx_fn')),
   ('ssize_t', 'readv', [('int', 'fd'),
                         ('const struct iovec*', 'iov'),
                         ('int', 'iovcnt')],
@@ -255,7 +262,7 @@ miscWrappers = [
                          ('int', 'protocol'),
                          ('int*', 'sv')],
                         ('extra', 'int ret_sv[2]')),
-  ('time_t', 'time', [('time_t*', 'tloc')], ('opt', 'decl_retval')),
+  ('time_t', 'time', [('time_t*', 'tloc', '__save_retval')]),
   ('int', 'truncate', [('const char*', 'path'),
                        ('off_t', 'length')]),
   ('int', 'ftruncate', [('int', 'fd'),
@@ -267,7 +274,8 @@ miscWrappers = [
   ('int', 'unlink', [('const char*', 'pathname')]),
   ('ssize_t', 'write', [('int', 'fd'),
                         ('const void*', 'buf'),
-                        ('size_t', 'count')]),
+                        ('size_t', 'count')],
+                        ('opt', 'decl_fred_xxx_fn')),
   ('ssize_t', 'writev', [('int', 'fd'),
                          ('const struct iovec*', 'iov'),
                          ('int', 'iovcnt')]),
@@ -420,10 +428,10 @@ fstreamWrappers = [
                         ('fpos64_t*', 'pos')]),
 
   ('int', 'fsetpos', [('FILE*', 'stream'),
-                      ('fpos_t*', 'pos')]),
+                      ('const fpos_t*', 'pos')]),
 
   ('int', 'fsetpos64', [('FILE*', 'stream'),
-                        ('fpos64_t*', 'pos')]),
+                        ('const fpos64_t*', 'pos')]),
 
   ('size_t', 'fwrite', [('const void*', 'ptr'),
                         ('size_t', 'size'),
@@ -498,19 +506,22 @@ pthreadCondWrappers = [
 xstatWrappers = [
   ('int', 'fxstat', [('int', 'vers'),
                      ('int', 'fd'),
-                     ('struct stat*', 'buf', '__save_retval')]),
+                     ('struct stat*', 'buf', '__save_retval')],
+                     ('opt', 'decl_fred_xxx_fn')),
   ('int', 'fxstat64', [('int', 'vers'),
                        ('int', 'fd'),
                        ('struct stat64*', 'buf', '__save_retval')]),
   ('int', 'lxstat', [('int', 'vers'),
                      ('const char*', 'path'),
-                     ('struct stat*', 'buf', '__save_retval')]),
+                     ('struct stat*', 'buf', '__save_retval')],
+                     ('opt', 'decl_fred_xxx_fn')),
   ('int', 'lxstat64', [('int', 'vers'),
                        ('const char*', 'path'),
                        ('struct stat64*', 'buf', '__save_retval')]),
   ('int', 'xstat', [('int', 'vers'),
                     ('const char*', 'path'),
-                    ('struct stat*', 'buf', '__save_retval')]),
+                    ('struct stat*', 'buf', '__save_retval')],
+                    ('opt', 'decl_fred_xxx_fn')),
   ('int', 'xstat64', [('int', 'vers'),
                       ('const char*', 'path'),
                       ('struct stat64*', 'buf', '__save_retval')]),
@@ -521,17 +532,17 @@ xstatWrappers = [
 
 #REACH_RECORD_REPLAY_WRAPPER_4('MACRO')]),
 printfScanfWrappers = [
-  ('int', 'fprintf', [('FILE*', 'stream'),
+  ('int', 'vfprintf', [('FILE*', 'stream'),
                       ('const char*', 'format'),
                       ('va_list', 'ap', '__no_save')]),
-  ('int', 'fscanf', [('FILE*', 'stream'),
+  ('int', 'vfscanf', [('FILE*', 'stream'),
                      ('const char*', 'format'),
                      ('va_list', 'ap', '__no_save')],
                     ('opt', 'decl_data_offset'),
                     ('extra', 'int bytes')),
 ]
 
-noSyscallWrappers = [
+nonSyscallWrappers = [
   #REACH_RECORD_REPLAY_WRAPPER_5('MACRO')]),
   ('void', 'exec_barrier', []),
   ('void', 'signal_handler', [('int', 'sig'),
@@ -552,14 +563,239 @@ syscallWrapper = [
                            ('void*', 'a7')]),
 ]
 
-wrapperGroups = [miscWrappers,
-                 fstreamWrappers,
-                 pthreadCondWrappers,
-                 xstatWrappers,
-                 printfScanfWrappers,
-                 noSyscallWrappers,
-                 syscallWrapper
+wrapperGroups = [(miscWrappers, 'misc'),
+                 (fstreamWrappers, 'fstream'),
+                 (pthreadCondWrappers, 'pthreadCond'),
+                 (xstatWrappers, 'xstat'),
+                 (printfScanfWrappers, 'printfScanf'),
+                 (nonSyscallWrappers, 'noSyscall'),
+                 (syscallWrapper, 'syscall'),
                 ]
+
+allWrappers = miscWrappers + fstreamWrappers + pthreadCondWrappers + xstatWrappers + \
+              printfScanfWrappers + nonSyscallWrappers + syscallWrapper
+
+# argument-flag := '__save_retval' | '__no_save'
+# opt-wrapper-info := ('opt', <optional-flags>) | ('extra', <extra-fields-for-struct>)
+# optional-flags := 'decl_data_offset' | 'decl_retval'
+
+class RetType:
+    """ Information about return type"""
+
+    def __init__(self, rtype):
+        self.ret_type_str = rtype.strip()
+
+    def __str__(self):
+        return self.ret_type_str
+
+    def format_str(self):
+        format_map = {'int' : '%d',
+                      'uid_t' : '%d',
+                      'gid_t' : '%d',
+                      'pid_t' : '%d',
+                      'off_t' : '%d',
+                      'loff_t' : '%lu',
+                      'off64_t' : '%l',
+                      'unsigned' : '%u',
+                      'unsigned int' : '%u',
+                      'long' : '%ld',
+                      'long int' : '%ld',
+                      'unsigned long' : '%ul',
+                      'unsigned long int' : '%ul',
+                      'long long' : '%ll',
+                      'long long int' : '%ll',
+                      'unsigned long long' : '%ull',
+                      'unsigned long long int' : '%ull',
+                      'void*' : '%p',
+                      'const void*' : '%p',
+                      'char*' : '%p',
+                      'const char*' : '%p',
+                      'size_t' : '%zu',
+                      'ssize_t' : '%z',
+                      'socklen_t' : '%u',
+                      'clockid_t' : '%u',
+                      'mode_t' : '%u',
+                      'idtype_t' : '%u',
+                      'id_t' : '%u',
+                      'mode_t' : '%u',
+                      '__WAIT_STATUS' : '%d',
+                      'pthread_start_routine_t' : '%p',
+                      'sighandler_t' : '%p',
+                      'nfds_t' : '%p',
+                      'pthread_t' : '%p'
+                      }
+        fmt = format_map.get(self.ret_type_str)
+        if fmt == None:
+            if self.ret_type_str[-1] != '*':
+                print self.ret_type_str
+            fmt = format_map.get('void*')
+        return fmt
+
+    def deref_type(self):
+        if self.ret_type_str[-1] == '*':
+            return self.ret_type_str[:-1]
+        if self.ret_type_str == '__WAIT_STATUS':
+            return 'void*'
+
+        print 'Error: Given type can not be dereferenced: ' + self.ret_type_str
+        raise
+        return None
+
+                      
+class ArgInfo:
+    """Information about each wrapper argument"""
+
+    def __init__(self, atuple):
+        if len(atuple) < 2:
+            print 'Error: Invalid Argument format'
+            return
+        self._ret_type = RetType(atuple[0])
+        self._name = atuple[1]
+        self._save_retval = '__save_retval' in atuple[2:]
+        self._dont_save = '__no_save' in atuple[2:]
+
+    def __str__(self):
+        return self._name
+
+    def arg_decl(self):
+        return str(self._ret_type) + ' ' + self._name
+
+    def name(self):
+        return self._name
+
+    def save_retval(self):
+        return self._save_retval
+
+    def dont_save(self):
+        return self._dont_save
+
+    def ret_type(self):
+        return self._ret_type
+
+    def deref_type(self):
+        return self._ret_type.deref_type()
+
+
+class WrapperInfo:
+    """Complete information about a wrapper function"""
+
+    def __init__(self, wtuple, groupName):
+        if len(wtuple) < 3:
+            print "Error: Invalid format"
+            print wtuple
+            return
+        self.ret_type = RetType(wtuple[0])
+        self._name = wtuple[1]
+        self.args = []
+        self.decl_data_offset = False
+        self.decl_retval = False
+        self.extra_fields_for_log_entry_struct = []
+        self.groupName = groupName
+
+        for arg in wtuple[2]:
+            self.args += [ArgInfo(arg)]
+
+        for info in wtuple[3:]:
+            if len(info) < 2:
+                print 'Error: Invalid optional information format'
+                break
+            if info[0] == 'opt':
+                if info[1] == 'decl_data_offset':
+                    self.decl_data_offset = True
+                if info[1] == 'decl_retval':
+                    self.decl_retval = True
+            if info[0] == 'extra':
+                self.extra_fields_for_log_entry_struct += [info[1]]
+
+    def __str__(self):
+        return self._name
+
+    def name(self):
+        return self._name
+
+    def enum(self):
+        return self._name + "_event"
+
+    def groupName(self):
+        return self.groupName
+
+    def get_arg_signature(self):
+        arg_sign = []
+        for arg in self.args:
+            arg_sign += [arg.arg_decl()]
+        return string.join(arg_sign, ', ')
+
+    def get_real_XXX_decl(self):
+        res = []
+        if self._name == 'syscall':
+            return 'long int _real_syscall(long int sys_num, ...);'
+        return '%s _real_%s(%s);' % (self.ret_type, self._name,
+                                     self.get_arg_signature())
+    def get_fred_XXX_decl(self):
+        res = []
+        if self._name == 'syscall':
+            return 'long int _real_syscall(long int sys_num, ...);'
+        return '%s _real_%s(%s);' % (self.ret_type, self._name,
+                                     self.get_arg_signature())
+
+    def get_create_entry_fn(self):
+        sign = 'log_entry_t create_%s_entry(' % (self._name)
+        slen = len(sign)
+        sign += 'clone_id_t clone_id, event_code_t event'
+        if len(self.args) > 0:
+            sign += ',\n%s%s' % (' ' * slen, self.get_arg_signature())
+        sign += ')'
+
+        body =  '\n{\n'
+        body += '  log_entry_t e = EMPTY_LOG_ENTRY;\n'
+        body += '  setupCommonFields(&e, clone_id, event);\n'
+
+        for arg in self.args:
+            if not arg.dont_save:
+                body += '  SET_FIELD(e, %s, %s);\n' % (self._name, arg.name())
+
+        body += '  return e;\n}\n'
+        return (sign, body)
+
+    def get_turn_check_p_fn(self):
+        sign = 'int %s_turn_check(log_entry_t *e1, log_entry_t *e2)' % (self._name)
+        body = '\n{\n  return base_turn_check(e1,e2)'
+        for arg in self.args:
+            body += '\n    && '
+            body += 'ARE_FIELDS_EQUAL_PTR (e1, e2, %s, %s)'  % (self._name, arg.name())
+        body += ';\n}\n'
+        return (sign, body)
+    
+    def get_struct_def(self):
+        ret = 'typedef struct {\n'
+        for arg in self.args:
+            ret += '  %s;\n' % (arg.arg_decl())
+            if arg.save_retval():
+                ret += '  %s %s;\n' % (arg.deref_type(), 'ret_' + arg.name())
+        if self.decl_data_offset:
+            ret += '  off_t data_offset;\n'
+        if self.decl_retval:
+            ret += '  %s %s_retval;\n' % (self.ret_type.deref_type(), self._name)
+        for extra in self.extra_fields_for_log_entry_struct:
+            ret += '  %s;\n' % (extra)
+    
+        ret += '} log_event_%s_t;\n' % (self._name)
+        return ret
+
+    def get_print_entry_fn(self):
+        sign =  'void print_log_entry_%s' % (self._name)
+        sign += '(int idx, log_entry_t *entry)'
+        body =  ' {\n'
+        body += '  printf("'
+        fmt_str = ''
+        arg_list = ''
+        for arg in self.args:
+            if arg.dont_save == False:
+                fmt_str += ' %s=%s' % (arg.name(), arg.ret_type.format_str())
+                arg_list += ',\n         GET_FIELD_PTR(entry, %s, %s)' \
+                         % (self._name, arg.name())
+        body = '  {\n  printf("%s\\n" %s);\n}\n' % (fmt_str, arg_list)
+        return (sign, body)
 
 copyrightHdr = """\
 /****************************************************************************
@@ -589,352 +825,193 @@ copyrightHdr = """\
 
 """
 
-def get_wrapper_enum(wrapper):
-    return wrapper[1] + "_event"
+def gen_wrapper_util_cpp(allWrappers):
+    header = '#include "wrapper_util.h"\n'
+    header += '#include "synchronizationlogging.h"\n\n'
+    footer = ''
 
-def get_wrapper_enum_list():
-    enumList=[]
-    for wrapperGroup in wrapperGroups:
-        enumList += map(get_wrapper_enum, wrapperGroup)
-    return enumList
+    log_event_size_start = 'static size_t log_event_size[numTotalWrappers] = {\n'
+    log_event_size_end = '\n};\n\n'
+    log_event_size_end += 'size_t getLogEventSize(const log_entry_t *entry) {\n'
+    log_event_size_end += ' return log_event_size[entry->header.event];\n}\n'
+
+    setup_common_fields = \
+        'static void setupCommonFields(log_entry_t *e, clone_id_t clone_id,\n' \
+        '                              event_code_t event)\n' \
+        '{\n' \
+        '  // Zero out all fields:\n' \
+        '  memset(&(e->header), 0, sizeof(e->header));\n' \
+        '  SET_COMMON_PTR(e, clone_id);\n' \
+        '  SET_COMMON_PTR(e, event);\n' \
+        '  SET_COMMON_PTR2(e, log_offset, INVALID_LOG_OFFSET);\n' \
+        '}\n'
+
+    base_turn_check = \
+        'static int base_turn_check(log_entry_t *e1, log_entry_t *e2) {\n' \
+        '  // Predicate function for a basic check -- event # and clone id.\n' \
+        '  return GET_COMMON_PTR(e1,clone_id) == GET_COMMON_PTR(e2,clone_id) &&\n' \
+        '         GET_COMMON_PTR(e1,event) == GET_COMMON_PTR(e2,event);\n' \
+        '}\n'
+    event_size = []
+    create_entry_fn = []
+    turn_check_p_fn = []
+    for winfo in allWrappers:
+        event_size += ['  sizeof(log_event_%s_t),' % (winfo.name())]
+        (create_entry_sign, create_entry_body) = winfo.get_create_entry_fn()
+        create_entry_fn += [create_entry_sign + create_entry_body]
+        (turn_check_p_sign, turn_check_p_body) = winfo.get_turn_check_p_fn()
+        turn_check_p_fn += [turn_check_p_sign + turn_check_p_body]
+
+    fd = open('wrapper_util.cpp', 'w')
+    fd.write(copyrightHdr)
+    fd.write(header)
+
+    fd.write(log_event_size_start)
+    fd.write(string.join(event_size, '\n'))
+    fd.write(log_event_size_end)
+
+    fd.write(setup_common_fields + '\n')
+    fd.write(string.join(create_entry_fn, '\n'))
+    fd.write(base_turn_check + '\n')
+    fd.write(string.join(turn_check_p_fn, '\n'))
+
+    fd.write(footer)
+    fd.close()
 
 
-def get_arg_decl(a):
-    return string.join(a[:2])
+def gen_fred_read_log_h(allWrappers):
+    header = '#include "synchronizationlogging.h"\n\n'
+    header += 'void print_log_entry_common(int idx, log_entry_t *entry);\n\n'
+    footer = ''
 
-def get_arg_signature(wrapper):
-    declList = map(get_arg_decl, wrapper[2])
-    argSignature = string.join(declList, ', ')
-    return argSignature
+    print_entry_start = 'void printEntry(int idx, log_entry_t *entry)\n{\n'
+    print_entry_start += '  print_log_entry_common(idx, entry);\n'
+    print_entry_start += '  switch (entry->header.event) {\n'
 
+    print_entry_end = '  }\n}\n'
+    log_event_str = 'static const char *log_event_str[] = {\n'
 
-def get_real_XXX_decl():
-    res = []
-    for wrapperGroup in wrapperGroups:
-        for wrapper in wrapperGroup:
-            if wrapper[1] == 'syscall':
-                res += ['long int _real_syscall(long int sys_num, ...);']
-            else:
-                res += ['%s _real_%s(%s);' \
-                        % (wrapper[0], wrapper[1], get_arg_signature(wrapper))]
-    return res
+    print_log_entry = []
+    print_entry = []
+    for winfo in allWrappers:
+        (print_str_sign, print_str_body) = winfo.get_print_entry_fn()
+        print_log_entry += [print_str_sign + print_str_body]
 
-def get_real_XXX_addrs():
-    res = []
-    for wrapper in miscWrappers + fstreamWrappers:
-        res += ['\t_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, %s);'
-                % (get_wrapper_enum(wrapper), wrapper[1])];
-    for wrapper in pthreadCondWrappers:
-        res += ['\t_real_func_addr[%s] = dlvsym(RTLD_NEXT, %s, "GLIBC_2.3.2");'
-                % (get_wrapper_enum(wrapper), wrapper[1])];
-    for wrapper in xstatWrappers:
-        res += ['\t_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, __%s);'
-                % (get_wrapper_enum(wrapper), wrapper[1])];
-    return res
+        print_entry += ['    case %s: print_log_entry_%s(idx, entry); break;\n' \
+                        % (winfo.enum(), winfo.name())]
 
+        log_event_str += '  "%s",\n' % (winfo.name())
 
-enumList = get_wrapper_enum_list() + ['numTotalWrappers']
-realDecl = get_real_XXX_decl()
-realAddrs = get_real_XXX_addrs()
+    fd = open('fred_read_log.h', 'w')
+    fd.write(copyrightHdr)
+    fd.write(header)
 
+    log_event_str += '};\n\n'
+    fd.write(log_event_str)
+
+    fd.write(string.join(print_log_entry, '\n'))
+
+    fd.write('\n')
+    fd.write(print_entry_start)
+    fd.write(string.join(print_entry, '\n'))
+    fd.write(print_entry_end)
+
+    fd.write(footer)
+    fd.close()
 
 ############################## 
 # Generate fred_wrappers.h
 ############################## 
 
-def create_fred_wrappers_h():
-    header = """
-#ifndef FRED_WRAPPERS_H
-#define FRED_WRAPPERS_H
+def gen_fred_wrappers_raw_h(allWrappers):
+    header  = '#ifndef FRED_WRAPPERS_H\n'
+    header += '# error "Never use <fred_wrappers_raw.h> directly;" \\\n'
+    header += '        "include <fred_wrappers.h> instead."\n'
+    header += '#endif\n\n'
+    header += '#ifdef __cplusplus\n'
+    header += 'extern "C"\n{\n'
+    header += '#endif\n'
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
+    enumList = []
+    realDeclList = []
+    for winfo in allWrappers:
+        enumList += [winfo.enum()]
+        realDeclList += [winfo.get_real_XXX_decl()]
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/ptrace.h>
-#include <sys/ioctl.h>
-#include <sys/fcntl.h>
-#include <utime.h>
-#include <sys/time.h>
-#include <net/if.h>
-#include <stdarg.h>
-#include <asm/ldt.h>
-#include <stdio.h>
-#include <thread_db.h>
-#include <sys/procfs.h>
-#include <syslog.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/epoll.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <poll.h>
-#include <pwd.h>
-#include <grp.h>
-#include <netdb.h>
-
-#include "constants.h"
-#include "fred_types.h"
-
-#define LIB_PRIVATE __attribute__ ((visibility ("hidden")))
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-"""
-
-    footer = """
-
-  extern int fred_wrappers_initializing;
-  void _dmtcp_setup_trampolines();
-  void initialize_wrappers();
-  void *_real_dlsym(void *handle, const char *symbol);
-  void *get_real_func_addr(event_code_t e, const char *name);
-  void *dmtcp_get_libc_dlsym_addr();
-  void prepareFredWrappers();
-
-#if __GLIBC_PREREQ(2,5)
-# define READLINK_RET_TYPE ssize_t
-#else
-# define READLINK_RET_TYPE int
-#endif
-
-  void *fred_mmap(void *addr, size_t length, int prot, int flags,
-                  int fd, off_t offset);
-  void *fred_mremap(void *old_address, size_t old_size,
-                    size_t new_size, int flags, ...);
-  int fred_munmap(void *addr, size_t length);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-"""
-
-    enum_str = '  typedef enum {\n    %s\n  } event_code_t;\n\n' \
+    enumList += ['numTotalWrappers']
+    out = '  typedef enum {\n    %s\n  } event_code_t;\n\n' \
                                % (string.join(enumList, ',\n    '))
+    out += '  ' + string.join(realDeclList, ';\n  ')
 
-    fd = open('fred_wrappers.h', 'w')
+    footer = '\n\n#ifdef __cplusplus\n}\n#endif'
+
+    fd = open('fred_wrappers_raw.h', 'w')
     fd.write(copyrightHdr)
     fd.write(header)
-    fd.write(enum_str)
-    fd.write('  ')
-    fd.write(string.join(realDecl, '\n  '))
+    fd.write(out)
     fd.write(footer)
     fd.close()
 
+def gen_syscallsreal_helper_c(allWrappers):
+    header  = '#include "fred_wrappers.h"\n\n'
+    header += 'void * _real_dlsym ( void *handle, const char *symbol );\n'
+    header += 'extern LIB_PRIVATE void *_real_func_addr[];\n'
 
-def create_syscallsreal_helper_c():
-    header = """
-#include "fred_wrappers.h"
-#include "trampolines.h"
-#include <dlfcn.h>
-
-void * _real_dlsym ( void *handle, const char *symbol );
-
-static void *_real_func_addr[numTotalWrappers];
-static int _wrappers_initialized = 0;
-
-static char wrapper_init_buf[1024];
-static trampoline_info_t pthread_getspecific_trampoline_info;
-void *_fred_pthread_getspecific(pthread_key_t key)
-{
-  if (_wrappers_initialized) {
-    fprintf(stderr, "DMTCP INTERNAL ERROR\\n\\n");
-    abort();
-  }
-  pthread_setspecific(key, wrapper_init_buf);
-  UNINSTALL_TRAMPOLINE(pthread_getspecific_trampoline_info);
-  return pthread_getspecific(key);
-}
-
-static void _fred_PreparePthreadGetSpecific()
-{
-  dmtcp_setup_trampoline_by_addr(&pthread_getspecific,
-                                 (void*) &_fred_pthread_getspecific,
-                                 &pthread_getspecific_trampoline_info);
-}
-
-"""
-    
-    footer = """
-LIB_PRIVATE
-void initialize_wrappers()
-{
-  if (!_wrappers_initialized) {
-    _fred_PreparePthreadGetSpecific();
-    fred_get_libc_func_addr();
-    _wrappers_initialized = 1;
-  }
-}
-
-LIB_PRIVATE
-void *get_real_func_addr(event_code_t e, const char *name) {
-  if (_real_func_addr[e] == NULL) {
-    prepareFredWrappers();
-  }
-  if (_real_func_addr[e] == NULL) {
-    fprintf(stderr, "*** DMTCP: Error: lookup failed for %s.\\n"
-                    "           The symbol wasn't found in current library"
-                    " loading sequence.\\n"
-                    "    Aborting.\\n", name);
-    abort();
-  }
-  return _real_func_addr[e];
-}
-
-LIB_PRIVATE
-void *_real_dlsym(void *handle, const char *symbol) {
-  typedef void* ( *fncptr ) (void *handle, const char *symbol);
-  fncptr dlsym_fptr = NULL;
-
-  if (dlsym_fptr == 0) {
-    dlsym_fptr = dmtcp_get_libc_dlsym_addr();
-    if (dlsym_fptr == NULL) {
-      fprintf(stderr, "DMTCP: Internal Error: Not Reached\\n");
-      abort();
-    }
-  }
-
-  return (*dlsym_fptr) ( handle, symbol );
-}
-
-"""
-
-    get_libc_func_addr_start = 'static void fred_get_libc_func_addr() {\n'
-    get_libc_func_addr_end = '\n}\n'
 
     libc_func_addr = []
-    for wrapper in miscWrappers + fstreamWrappers + syscallWrapper:
-        libc_func_addr += ['_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, "%s");' \
-                           % (get_wrapper_enum(wrapper), wrapper[1])]
-    for wrapper in pthreadCondWrappers:
-        libc_func_addr += ['_real_func_addr[%s] = dlvsym(RTLD_NEXT, "%s", "GLIBC_2.3.2");' \
-                           % (get_wrapper_enum(wrapper), wrapper[1])]
-    for wrapper in xstatWrappers:
-        libc_func_addr += ['_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, "__%s");' \
-                           % (get_wrapper_enum(wrapper), wrapper[1])]
+    for wInfo in allWrappers:
+        if wInfo.groupName == 'pthreadCond':
+            s = '_real_func_addr[%s] = dlvsym(RTLD_NEXT, "%s", "GLIBC_2.3.2");' \
+                               % (wInfo.enum(), wInfo.name())
+        elif wInfo.groupName == 'xstat':
+            s = '_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, "__%s");' \
+                               % (wInfo.enum(), wInfo.name())
+        else:
+            s = '_real_func_addr[%s] = _real_dlsym(RTLD_NEXT, "%s");' \
+                               % (wInfo.enum(), wInfo.name())
+        libc_func_addr += [s]
+
+    out = 'LIB_PRIVATE void fred_get_libc_func_addr() {\n  %s\n}' \
+            % (string.join(libc_func_addr, '\n  '))
 
     fd = open('syscallsreal_helper.c', 'w')
     fd.write(copyrightHdr)
     fd.write(header)
-    fd.write(get_libc_func_addr_start)
-    fd.write('  ')
-    fd.write(string.join(libc_func_addr, '\n  '))
-    fd.write(get_libc_func_addr_end)
-    fd.write(footer)
+    fd.write(out)
     fd.close()
 
-def get_create_entry_fn(wrapper):
-    sign = 'log_entry_t create_%s_entry(' % (wrapper[1])
-    slen = len(sign)
-    sign += 'clone_id_t clone_id, event_code_t event'
-    if len(wrapper[2]) > 0:
-        sign += ',\n%s%s' % (' ' * slen, get_arg_signature(wrapper))
+def gen_wrapper_util_h(allWrappers):
+    header  = '#ifndef WRAPPER_UTIL_H\n'
+    header += '#define WRAPPER_UTIL_H\n\n'
+    header += '#include "fred_wrappers.h"\n\n'
 
-    sign += ')'
-    body = """
-{
-  log_entry_t e = EMPTY_LOG_ENTRY;
-  setupCommonFields(&e, clone_id, event);
-"""
-    for arg in wrapper[2]:
-        if not '__no_save' in arg:
-            body += '  SET_FIELD(e, %s, %s);\n' % (wrapper[1], arg[1])
+    header += '#ifdef __cplusplus\n'
+    header += 'extern "C"\n{\n'
+    header += '#endif\n'
 
-    body += """\
-  return e;
-}
-"""
-    return (sign, body)
-
-def get_turn_check_p_fn(wrapper):
-    ret = 'int %s_turn_check(log_entry_t *e1, log_entry_t *e2)\n' % (wrapper[1])
-    ret += '{\n  return base_turn_check(e1,e2)'
-    for arg in wrapper[2]:
-        ret += '\n    && '
-        ret += 'ARE_FIELDS_EQUAL_PTR (e1, e2, %s, %s)'  % (wrapper[1], arg[1])
-    ret += ';\n}\n'
-    return ret
-
-def get_deref_type(t):
-    tt = t.rstrip()
-    if tt[-1] == '*':
-        return tt[:-1]
-    return tt
-
-def get_struct_def(wrapper):
-    ret = 'typedef struct {\n'
-    for arg in wrapper[2]:
-        ret += '  %s %s;\n' % (arg[0], arg[1])
-        if '__save_retval' in arg:
-            ret += '  %s %s;\n' % (get_deref_type(arg[0]), 'ret_' + arg[1])
-    for rest in wrapper[3:]:
-        if rest[0] == 'opt':
-            if rest[1] == 'decl_data_offset':
-                ret += '  off_t data_offset;\n'
-            if rest[1] == 'decl_retval':
-                ret += '  %s %s_retval;\n' % (get_deref_type(wrapper[0]), wrapper[1])
-        if rest[0] == 'extra':
-            ret += '  %s;\n' % (rest[1])
-
-    ret += '} log_event_%s_t;\n' % (wrapper[1])
-    return ret
-
-def create_wrapper_util_h():
-    header = """\
-#ifndef WRAPPER_UTIL_H
-#define WRAPPER_UTIL_H
-
-#include "fred_wrappers.h"
-#include "wrapper_util.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-"""
     log_entry_decl = """
-typedef struct {
-  event_code_t event;
-  unsigned char isOptional;
-  log_off_t log_offset;
-  clone_id_t clone_id;
-  int my_errno;
-  void* retval;
-} log_entry_header_t;
-
-typedef struct {
-  // We aren't going to map more than 256 system calls/functions.
-  // We can expand it to 4 bytes if needed. However a single byte makes
-  // things easier.
-  // Shared among all events ("common area"):
-  /* IMPORTANT: Adding new fields to the common area requires that you also
-   * update the log_event_common_size definition. */
-  log_entry_header_t header;
-
-  union log_entry_data edata;
-} log_entry_t;
+      typedef struct {
+        event_code_t event;
+        unsigned char isOptional;
+        log_off_t log_offset;
+        clone_id_t clone_id;
+        int my_errno;
+        void* retval;
+      } log_entry_header_t;
+      
+      typedef struct {
+        // Shared among all events ("common area"):
+        /* IMPORTANT: Adding new fields to the common area requires that you also
+         * update the log_event_common_size definition. */
+        log_entry_header_t header;
+      
+        union log_entry_data edata;
+      } log_entry_t;
 """
-    footer = """
 
-size_t getLogEventSize(const log_entry_t *entry);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif"""
+    footer = 'size_t getLogEventSize(const log_entry_t *entry);\n\n'
+    footer += '#ifdef __cplusplus\n}\n#endif\n'
+    footer += '#endif\n'
 
     log_entry_union_start = 'union log_entry_data {\n  '
     log_entry_union_end = '\n};\n'
@@ -944,17 +1021,16 @@ size_t getLogEventSize(const log_entry_t *entry);
     struct_def = []
     turn_check_p = []
     create_entry = []
-    for wrapperGroup in wrapperGroups:
-        for wrapper in wrapperGroup:
-            event_size += ['static const int log_event_%s_size = sizeof(log_event_%s_t);' \
-                           % (wrapper[1], wrapper[1])]
-            log_entry_union += ['log_event_%s_t log_event_%s;' \
-                                % (wrapper[1], wrapper[1])]
-            turn_check_p += ['int %s_turn_check(log_entry_t *e1, log_entry_t *e2);' \
-                             % (wrapper[1])]
-            (create_entry_sign, create_entry_body) = get_create_entry_fn(wrapper)
-            create_entry += [create_entry_sign + ';']
-            struct_def += [get_struct_def(wrapper)]
+    for wInfo in allWrappers:
+        event_size += ['static const int log_event_%s_size = sizeof(log_event_%s_t);' \
+                       % (wInfo.name(), wInfo.name())]
+        log_entry_union += ['log_event_%s_t log_event_%s;' \
+                            % (wInfo.name(), wInfo.name())]
+        turn_check_p += ['int %s_turn_check(log_entry_t *e1, log_entry_t *e2);' \
+                         % (wInfo.name())]
+        (create_entry_sign, create_entry_body) = wInfo.get_create_entry_fn()
+        create_entry += [create_entry_sign + ';']
+        struct_def += [wInfo.get_struct_def()]
 
     fd = open('wrapper_util.h', 'w')
     fd.write(copyrightHdr)
@@ -984,130 +1060,18 @@ size_t getLogEventSize(const log_entry_t *entry);
     fd.close()
 
 
-def create_wrapper_util_cpp():
-    header = """\
-#include "wrapper_util.h"
-#include "synchronizationlogging.h"
-"""
-    footer = ''
-
-    log_event_size_start="""
-static size_t log_event_size[numTotalWrappers] = {
-"""
-    log_event_size_end = """
-};
-
-size_t getLogEventSize(const log_entry_t *entry)
-{
-  return log_event_size[entry->header.event];
-}
-"""
-
-    setup_common_fields = """
-static void setupCommonFields(log_entry_t *e, clone_id_t clone_id, event_code_t event)
-{
-  SET_COMMON_PTR(e, clone_id);
-  SET_COMMON_PTR(e, event);
-  // Zero out all other fields:
-  // FIXME: Shouldn't we replace the memset with a simpler SET_COMMON_PTR()?
-  SET_COMMON_PTR2(e, log_offset, INVALID_LOG_OFFSET);
-  memset(&(GET_COMMON_PTR(e, my_errno)), 0, sizeof(GET_COMMON_PTR(e, my_errno)));
-  memset(&(GET_COMMON_PTR(e, retval)), 0, sizeof(GET_COMMON_PTR(e, retval)));
-}
-"""
-    base_turn_check = """
-static int base_turn_check(log_entry_t *e1, log_entry_t *e2) {
-  // Predicate function for a basic check -- event # and clone id.
-  return GET_COMMON_PTR(e1,clone_id) == GET_COMMON_PTR(e2,clone_id) &&
-         GET_COMMON_PTR(e1,event) == GET_COMMON_PTR(e2,event);
-}
-"""
-    event_size = []
-    create_entry_fn = []
-    turn_check_p_fn = []
-    for wrapperGroup in wrapperGroups:
+def main():
+    """Start hook"""
+    allWrappers = []
+    for (wrapperGroup, groupName) in wrapperGroups:
         for wrapper in wrapperGroup:
-            event_size += ['  sizeof(log_event_%s_t),' % (wrapper[1])]
-            (create_entry_sign, create_entry_body) = get_create_entry_fn(wrapper)
-            create_entry_fn += [create_entry_sign + create_entry_body]
-            turn_check_p_fn += [get_turn_check_p_fn(wrapper)]
+            allWrappers += [WrapperInfo(wrapper, groupName)]
+    gen_fred_read_log_h(allWrappers)
+    gen_wrapper_util_cpp(allWrappers)
+    gen_fred_wrappers_raw_h(allWrappers)
+    gen_syscallsreal_helper_c(allWrappers)
+    gen_wrapper_util_h(allWrappers)
+    return
 
-    fd = open('wrapper_util.cpp', 'w')
-    fd.write(copyrightHdr)
-    fd.write(header)
-
-    fd.write(log_event_size_start)
-    fd.write(string.join(event_size, '\n'))
-    fd.write(log_event_size_end)
-
-    fd.write(setup_common_fields + '\n')
-    fd.write(string.join(create_entry_fn, '\n'))
-    fd.write(base_turn_check + '\n')
-    fd.write(string.join(turn_check_p_fn, '\n'))
-
-    fd.write(footer)
-    fd.close()
-
-
-def create_fred_read_log_h():
-    header = """\
-#include "synchronizationlogging.h"
-
-void print_log_entry_common(int idx, log_entry_t *entry);
-
-"""
-    footer = ''
-
-    print_entry_start = 'void printEntry(int idx, log_entry_t *entry)\n{\n'
-    print_entry_start += 'switch (entry->header.event) {\n'
-
-    print_entry_end = '  }\n}\n'
-    log_event_str = 'static const char *log_event_str[] = {\n'
-
-    print_log_entry = []
-    print_entry = []
-    for wrapperGroup in wrapperGroups:
-        for wrapper in wrapperGroup:
-            print_str = 'void print_log_entry_%s' % (wrapper[1])
-            print_str += '(int idx, log_entry_t *entry) {\n'
-            print_str += '  print_log_entry_common(idx, entry);\n'
-            print_str += '  printf("'
-            print_arg = ''
-            for arg in wrapper[2]:
-                print_str += '%s=' % arg[1]
-                if not '__no_save' in arg:
-                    print_arg += ',\n         GET_FIELD_PTR(entry, %s, %s)' \
-                                 % (wrapper[1], arg[1])
-                    if arg[1].rstrip()[-1] == '*':
-                        print_str += ', %p'
-            print_str += '\\n"' + print_arg + ');\n}\n'
-            print_log_entry += [print_str]
-
-            print_entry += ['    case %s: print_log_entry_%s(idx, entry); break;\n' \
-                            % (get_wrapper_enum(wrapper), wrapper[1])]
-
-            log_event_str += '  "%s",\n' % (wrapper[1])
-
-    fd = open('fred_read_log.h', 'w')
-    fd.write(copyrightHdr)
-    fd.write(header)
-
-    log_event_str += '};\n\n'
-    fd.write(log_event_str)
-
-    fd.write(string.join(print_log_entry, '\n'))
-
-    fd.write(print_entry_start)
-    fd.write(string.join(print_entry, '\n'))
-    fd.write(print_entry_end)
-
-    fd.write(footer)
-    fd.close()
-
-
-
-create_fred_wrappers_h()
-create_syscallsreal_helper_c()
-create_wrapper_util_h()
-create_wrapper_util_cpp()
-create_fred_read_log_h()
+if __name__ == '__main__':
+    main()

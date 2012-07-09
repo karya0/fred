@@ -27,7 +27,6 @@
 #define WRAPPER_UTIL_H
 
 #include "fred_wrappers.h"
-#include "wrapper_util.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -131,7 +130,6 @@ typedef struct {
   struct timeval ret_tv;
   struct timezone* tz;
   struct timezone ret_tz;
-  int gettimeofday_retval;
 } log_event_gettimeofday_t;
 
 typedef struct {
@@ -498,7 +496,7 @@ typedef struct {
 
 typedef struct {
   time_t* tloc;
-  time_t time_retval;
+  time_t ret_tloc;
 } log_event_time_t;
 
 typedef struct {
@@ -678,7 +676,7 @@ typedef struct {
 typedef struct {
   pid_t pid;
   __WAIT_STATUS status;
-  __WAIT_STATUS ret_status;
+  void* ret_status;
   int options;
   struct rusage* rusage;
   struct rusage ret_rusage;
@@ -795,12 +793,12 @@ typedef struct {
 
 typedef struct {
   FILE* stream;
-  fpos_t* pos;
+  const fpos_t* pos;
 } log_event_fsetpos_t;
 
 typedef struct {
   FILE* stream;
-  fpos64_t* pos;
+  const fpos64_t* pos;
 } log_event_fsetpos64_t;
 
 typedef struct {
@@ -981,7 +979,7 @@ typedef struct {
   FILE* stream;
   const char* format;
   va_list ap;
-} log_event_fprintf_t;
+} log_event_vfprintf_t;
 
 typedef struct {
   FILE* stream;
@@ -989,7 +987,7 @@ typedef struct {
   va_list ap;
   off_t data_offset;
   int bytes;
-} log_event_fscanf_t;
+} log_event_vfscanf_t;
 
 typedef struct {
 } log_event_exec_barrier_t;
@@ -1171,8 +1169,8 @@ union log_entry_data {
   log_event_xstat_t log_event_xstat;
   log_event_xstat64_t log_event_xstat64;
   log_event_libc_memalign_t log_event_libc_memalign;
-  log_event_fprintf_t log_event_fprintf;
-  log_event_fscanf_t log_event_fscanf;
+  log_event_vfprintf_t log_event_vfprintf;
+  log_event_vfscanf_t log_event_vfscanf;
   log_event_exec_barrier_t log_event_exec_barrier;
   log_event_signal_handler_t log_event_signal_handler;
   log_event_user_t log_event_user;
@@ -1181,26 +1179,23 @@ union log_entry_data {
 
 
 
-typedef struct {
-  event_code_t event;
-  unsigned char isOptional;
-  log_off_t log_offset;
-  clone_id_t clone_id;
-  int my_errno;
-  void* retval;
-} log_entry_header_t;
-
-typedef struct {
-  // We aren't going to map more than 256 system calls/functions.
-  // We can expand it to 4 bytes if needed. However a single byte makes
-  // things easier.
-  // Shared among all events ("common area"):
-  /* IMPORTANT: Adding new fields to the common area requires that you also
-   * update the log_event_common_size definition. */
-  log_entry_header_t header;
-
-  union log_entry_data edata;
-} log_entry_t;
+      typedef struct {
+        event_code_t event;
+        unsigned char isOptional;
+        log_off_t log_offset;
+        clone_id_t clone_id;
+        int my_errno;
+        void* retval;
+      } log_entry_header_t;
+      
+      typedef struct {
+        // Shared among all events ("common area"):
+        /* IMPORTANT: Adding new fields to the common area requires that you also
+         * update the log_event_common_size definition. */
+        log_entry_header_t header;
+      
+        union log_entry_data edata;
+      } log_entry_t;
 
 
 int empty_turn_check(log_entry_t *e1, log_entry_t *e2);
@@ -1358,8 +1353,8 @@ int lxstat64_turn_check(log_entry_t *e1, log_entry_t *e2);
 int xstat_turn_check(log_entry_t *e1, log_entry_t *e2);
 int xstat64_turn_check(log_entry_t *e1, log_entry_t *e2);
 int libc_memalign_turn_check(log_entry_t *e1, log_entry_t *e2);
-int fprintf_turn_check(log_entry_t *e1, log_entry_t *e2);
-int fscanf_turn_check(log_entry_t *e1, log_entry_t *e2);
+int vfprintf_turn_check(log_entry_t *e1, log_entry_t *e2);
+int vfscanf_turn_check(log_entry_t *e1, log_entry_t *e2);
 int exec_barrier_turn_check(log_entry_t *e1, log_entry_t *e2);
 int signal_handler_turn_check(log_entry_t *e1, log_entry_t *e2);
 int user_turn_check(log_entry_t *e1, log_entry_t *e2);
@@ -1610,9 +1605,9 @@ log_entry_t create_fgetpos_entry(clone_id_t clone_id, event_code_t event,
 log_entry_t create_fgetpos64_entry(clone_id_t clone_id, event_code_t event,
                                    FILE* stream, fpos64_t* pos);
 log_entry_t create_fsetpos_entry(clone_id_t clone_id, event_code_t event,
-                                 FILE* stream, fpos_t* pos);
+                                 FILE* stream, const fpos_t* pos);
 log_entry_t create_fsetpos64_entry(clone_id_t clone_id, event_code_t event,
-                                   FILE* stream, fpos64_t* pos);
+                                   FILE* stream, const fpos64_t* pos);
 log_entry_t create_fwrite_entry(clone_id_t clone_id, event_code_t event,
                                 const void* ptr, size_t size, size_t nmemb, FILE* stream);
 log_entry_t create_fread_entry(clone_id_t clone_id, event_code_t event,
@@ -1672,22 +1667,19 @@ log_entry_t create_xstat64_entry(clone_id_t clone_id, event_code_t event,
                                  int vers, const char* path, struct stat64* buf);
 log_entry_t create_libc_memalign_entry(clone_id_t clone_id, event_code_t event,
                                        size_t boundary, size_t size);
-log_entry_t create_fprintf_entry(clone_id_t clone_id, event_code_t event,
+log_entry_t create_vfprintf_entry(clone_id_t clone_id, event_code_t event,
+                                  FILE* stream, const char* format, va_list ap);
+log_entry_t create_vfscanf_entry(clone_id_t clone_id, event_code_t event,
                                  FILE* stream, const char* format, va_list ap);
-log_entry_t create_fscanf_entry(clone_id_t clone_id, event_code_t event,
-                                FILE* stream, const char* format, va_list ap);
 log_entry_t create_exec_barrier_entry(clone_id_t clone_id, event_code_t event);
 log_entry_t create_signal_handler_entry(clone_id_t clone_id, event_code_t event,
                                         int sig, siginfo_t* info, void* data);
 log_entry_t create_user_entry(clone_id_t clone_id, event_code_t event);
 log_entry_t create_syscall_entry(clone_id_t clone_id, event_code_t event,
                                  int num, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6, void* a7);
-
-
 size_t getLogEventSize(const log_entry_t *entry);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

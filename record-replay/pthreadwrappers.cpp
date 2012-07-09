@@ -975,12 +975,14 @@ extern "C" time_t time(time_t *tloc)
   if (SYNC_IS_REPLAY) {
     WRAPPER_REPLAY_START(time);
     if (retval != (time_t) -1 && tloc != NULL) {
-      *tloc = GET_FIELD(my_entry, time, time_retval);
+      *tloc = GET_FIELD(my_entry, time, ret_tloc);
     }
     WRAPPER_REPLAY_END(time);
   } else if (SYNC_IS_RECORD) {
     retval = _real_time(tloc);
-    SET_FIELD2(my_entry, time, time_retval, retval);
+    if (tloc != NULL) {
+      SET_FIELD2(my_entry, time, ret_tloc, *tloc);
+    }
     WRAPPER_LOG_WRITE_ENTRY(my_entry);
   }
   return retval;

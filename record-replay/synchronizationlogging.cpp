@@ -372,10 +372,10 @@ static inline bool is_optional_event_for(event_code_t event,
   case ferror_event:
   case feof_event:
   case fileno_event:
-  case fprintf_event:
+  case vfprintf_event:
   case fputc_event:
   case fputs_event:
-  case fscanf_event:
+  case vfscanf_event:
   case fseek_event:
   case fwrite_event:
   case fread_event:
