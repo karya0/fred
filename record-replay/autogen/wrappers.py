@@ -24,6 +24,7 @@
 import pdb
 import re
 import string
+import textwrap
 
 # Information on adding new wrappers/wrapper-groups:
 #
@@ -830,31 +831,42 @@ copyrightHdr = """\
 """
 
 def gen_wrapper_util_cpp(allWrappers):
-    header  = '#include "wrapper_util.h"\n'
-    header += '#include "synchronizationlogging.h"\n\n'
+    header = textwrap.dedent("""\
+        #include "wrapper_util.h"
+        #include "synchronizationlogging.h"
+
+        """)
 
     log_event_size_start = 'static size_t log_event_size[numTotalWrappers] = {\n'
-    log_event_size_end = '\n};\n\n'
-    log_event_size_end += 'size_t getLogEventSize(const log_entry_t *entry) {\n'
-    log_event_size_end += ' return log_event_size[entry->header.event];\n}\n'
+    log_event_size_end = textwrap.dedent("""\
 
-    setup_common_fields = \
-        'static void setupCommonFields(log_entry_t *e, clone_id_t clone_id,\n' \
-        '                              event_code_t event)\n' \
-        '{\n' \
-        '  // Zero out all fields:\n' \
-        '  memset(&(e->header), 0, sizeof(e->header));\n' \
-        '  SET_COMMON_PTR(e, clone_id);\n' \
-        '  SET_COMMON_PTR(e, event);\n' \
-        '  SET_COMMON_PTR2(e, log_offset, INVALID_LOG_OFFSET);\n' \
-        '}\n'
+        };
 
-    base_turn_check = \
-        'static int base_turn_check(log_entry_t *e1, log_entry_t *e2) {\n' \
-        '  // Predicate function for a basic check -- event # and clone id.\n' \
-        '  return GET_COMMON_PTR(e1,clone_id) == GET_COMMON_PTR(e2,clone_id) &&\n' \
-        '         GET_COMMON_PTR(e1,event) == GET_COMMON_PTR(e2,event);\n' \
-        '}\n'
+        size_t getLogEventSize(const log_entry_t *entry) {
+          return log_event_size[entry->header.event];
+        }
+        """)
+
+    setup_common_fields = textwrap.dedent("""\
+        static void setupCommonFields(log_entry_t *e, clone_id_t clone_id,
+                                      event_code_t event)
+        {
+          // Zero out all fields:
+          memset(&(e->header), 0, sizeof(e->header));
+          SET_COMMON_PTR(e, clone_id);
+          SET_COMMON_PTR(e, event);
+          SET_COMMON_PTR2(e, log_offset, INVALID_LOG_OFFSET);
+        }
+        """)
+
+    base_turn_check = textwrap.dedent("""\
+        static int base_turn_check(log_entry_t *e1, log_entry_t *e2) {
+          // Predicate function for a basic check -- event # and clone id.
+          return GET_COMMON_PTR(e1,clone_id) == GET_COMMON_PTR(e2,clone_id) &&
+                 GET_COMMON_PTR(e1,event) == GET_COMMON_PTR(e2,event);
+        }
+        """)
+
     event_size = []
     create_entry_fn = []
     turn_check_p_fn = []
@@ -882,13 +894,19 @@ def gen_wrapper_util_cpp(allWrappers):
 
 
 def gen_fred_read_log_h(allWrappers):
-    header = '#include "synchronizationlogging.h"\n\n'
-    header += 'void print_log_entry_common(int idx, log_entry_t *entry);\n\n'
-    footer = ''
+    header = textwrap.dedent("""\
+        #include "synchronizationlogging.h"
 
-    print_entry_start = 'void printEntry(int idx, log_entry_t *entry)\n{\n'
-    print_entry_start += '  print_log_entry_common(idx, entry);\n'
-    print_entry_start += '  switch (entry->header.event) {\n'
+        void print_log_entry_common(int idx, log_entry_t *entry);
+
+        """)
+
+    print_entry_start = textwrap.dedent("""\
+        void printEntry(int idx, log_entry_t *entry)
+        {
+          print_log_entry_common(idx, entry);
+          switch (entry->header.event) {
+          """)
 
     print_entry_end = '  }\n}\n'
     log_event_str = 'static const char *log_event_str[] = {\n'
@@ -918,7 +936,6 @@ def gen_fred_read_log_h(allWrappers):
     fd.write(string.join(print_entry, '\n'))
     fd.write(print_entry_end)
 
-    fd.write(footer)
     fd.close()
 
 ############################## 
@@ -926,13 +943,18 @@ def gen_fred_read_log_h(allWrappers):
 ############################## 
 
 def gen_fred_wrappers_raw_h(allWrappers):
-    header  = '#ifndef FRED_WRAPPERS_H\n'
-    header += '# error "Never use <fred_wrappers_raw.h> directly;" \\\n'
-    header += '        "include <fred_wrappers.h> instead."\n'
-    header += '#endif\n\n'
-    header += '#ifdef __cplusplus\n'
-    header += 'extern "C"\n{\n'
-    header += '#endif\n'
+    header = textwrap.dedent("""\
+        #ifndef FRED_WRAPPERS_H
+        # error "Never use <fred_wrappers_raw.h> directly;" \\
+                "include <fred_wrappers.h> instead."
+        #endif
+
+        #ifdef __cplusplus
+        extern "C"
+        {
+        #endif
+
+        """)
 
     enumList = []
     realDeclList = []
@@ -955,10 +977,13 @@ def gen_fred_wrappers_raw_h(allWrappers):
     fd.close()
 
 def gen_syscallsreal_helper_c(allWrappers):
-    header  = '#include "fred_wrappers.h"\n\n'
-    header += 'void * _real_dlsym ( void *handle, const char *symbol );\n'
-    header += 'extern LIB_PRIVATE void *_real_func_addr[];\n\n'
+    header = textwrap.dedent("""\
+        #include "fred_wrappers.h"
 
+        void * _real_dlsym(void *handle, const char *symbol);
+        extern LIB_PRIVATE void *_real_func_addr[];
+
+        """)
 
     libc_func_addr = []
     for wInfo in allWrappers:
@@ -983,37 +1008,47 @@ def gen_syscallsreal_helper_c(allWrappers):
     fd.close()
 
 def gen_wrapper_util_h(allWrappers):
-    header  = '#ifndef WRAPPER_UTIL_H\n'
-    header += '#define WRAPPER_UTIL_H\n\n'
-    header += '#include "fred_wrappers.h"\n\n'
+    header = textwrap.dedent("""\
+        #ifndef WRAPPER_UTIL_H
+        #define WRAPPER_UTIL_H
 
-    header += '#ifdef __cplusplus\n'
-    header += 'extern "C"\n{\n'
-    header += '#endif\n'
+        #include "fred_wrappers.h"
 
-    log_entry_decl = """
-      typedef struct {
-        event_code_t event;
-        unsigned char isOptional;
-        log_off_t log_offset;
-        clone_id_t clone_id;
-        int my_errno;
-        void* retval;
-      } log_entry_header_t;
-      
-      typedef struct {
-        // Shared among all events ("common area"):
-        /* IMPORTANT: Adding new fields to the common area requires that you also
-         * update the log_event_common_size definition. */
-        log_entry_header_t header;
-      
-        union log_entry_data edata;
-      } log_entry_t;
-"""
+        #ifdef __cplusplus
+        extern "C"
+        {
+        #endif
 
-    footer = 'size_t getLogEventSize(const log_entry_t *entry);\n\n'
-    footer += '#ifdef __cplusplus\n}\n#endif\n'
-    footer += '#endif\n'
+        """)
+
+    log_entry_decl = textwrap.dedent("""\
+        typedef struct {
+          event_code_t event;
+          unsigned char isOptional;
+          log_off_t log_offset;
+          clone_id_t clone_id;
+          int my_errno;
+          void* retval;
+        } log_entry_header_t;
+
+        typedef struct {
+          // Shared among all events ("common area"):
+          /* IMPORTANT: Adding new fields to the common area requires that you also
+           * update the log_event_common_size definition. */
+          log_entry_header_t header;
+
+          union log_entry_data edata;
+        } log_entry_t;
+
+        """)
+
+    footer = textwrap.dedent("""\
+        size_t getLogEventSize(const log_entry_t *entry);
+
+        #ifdef __cplusplus
+        }
+        #endif
+        #endif""")
 
     log_entry_union_start = 'union log_entry_data {\n  '
     log_entry_union_end = '\n};\n'

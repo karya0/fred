@@ -191,7 +191,7 @@ static size_t log_event_size[numTotalWrappers] = {
 };
 
 size_t getLogEventSize(const log_entry_t *entry) {
- return log_event_size[entry->header.event];
+  return log_event_size[entry->header.event];
 }
 static void setupCommonFields(log_entry_t *e, clone_id_t clone_id,
                               event_code_t event)

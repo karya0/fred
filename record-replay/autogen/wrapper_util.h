@@ -32,6 +32,7 @@
 extern "C"
 {
 #endif
+
 typedef struct {
 } log_event_empty_t;
 
@@ -1178,24 +1179,24 @@ union log_entry_data {
 };
 
 
+typedef struct {
+  event_code_t event;
+  unsigned char isOptional;
+  log_off_t log_offset;
+  clone_id_t clone_id;
+  int my_errno;
+  void* retval;
+} log_entry_header_t;
 
-      typedef struct {
-        event_code_t event;
-        unsigned char isOptional;
-        log_off_t log_offset;
-        clone_id_t clone_id;
-        int my_errno;
-        void* retval;
-      } log_entry_header_t;
-      
-      typedef struct {
-        // Shared among all events ("common area"):
-        /* IMPORTANT: Adding new fields to the common area requires that you also
-         * update the log_event_common_size definition. */
-        log_entry_header_t header;
-      
-        union log_entry_data edata;
-      } log_entry_t;
+typedef struct {
+  // Shared among all events ("common area"):
+  /* IMPORTANT: Adding new fields to the common area requires that you also
+   * update the log_event_common_size definition. */
+  log_entry_header_t header;
+
+  union log_entry_data edata;
+} log_entry_t;
+
 
 
 int empty_turn_check(log_entry_t *e1, log_entry_t *e2);

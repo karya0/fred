@@ -32,6 +32,7 @@
 extern "C"
 {
 #endif
+
   typedef enum {
     empty_event,
     accept_event,

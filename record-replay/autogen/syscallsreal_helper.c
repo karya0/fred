@@ -25,7 +25,7 @@
 
 #include "fred_wrappers.h"
 
-void * _real_dlsym ( void *handle, const char *symbol );
+void * _real_dlsym(void *handle, const char *symbol);
 extern LIB_PRIVATE void *_real_func_addr[];
 
 LIB_PRIVATE void fred_get_libc_func_addr() {
