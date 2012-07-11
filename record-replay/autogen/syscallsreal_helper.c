@@ -27,6 +27,7 @@
 
 void * _real_dlsym ( void *handle, const char *symbol );
 extern LIB_PRIVATE void *_real_func_addr[];
+
 LIB_PRIVATE void fred_get_libc_func_addr() {
   _real_func_addr[empty_event] = _real_dlsym(RTLD_NEXT, "empty");
   _real_func_addr[accept_event] = _real_dlsym(RTLD_NEXT, "accept");

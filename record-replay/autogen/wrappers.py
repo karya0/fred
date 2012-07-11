@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 ###############################################################################
 # Copyright (C) 2009, 2010, 2011, 2012 by Kapil Arya, Gene Cooperman,         #
 #                                        Tyler Denniston, and Ana-Maria Visan #
@@ -23,9 +25,13 @@ import pdb
 import re
 import string
 
-# Format for each wrapper tuple:
+# Information on adding new wrappers/wrapper-groups:
+#
+# "wrapperGroups" := <list of wrapper-group-tuples>
+# wrapper-group-tuple := (<wrapper-group>, <group-name>)
+# wrapper-group := <list of wrapper-tuples>
 # wrapper-tuple := ('<type>', '<name>', <argument-list> [, <opt-wrapper-info>]*)
-# argument-list := \[<argument-tuple>*\]
+# argument-list := <list of argument-tuples>
 # argument-tuple := ('<type>', '<name>' [,<argument-flag>]*)
 # argument-flag := '__save_retval' | '__no_save'
 # opt-wrapper-info := ('opt', <optional-flags>) | ('extra', <extra-fields-for-struct>)
@@ -37,8 +43,9 @@ import string
 #  '__no_save' : do not include this arg in log entry struct
 #  'decl_data_offset' : add a 'off_t data_offset' field to the log entry struct
 #  'decl_retval' : add a '<ret-type> <name__retval' field to the log entry struct
-#
 
+# Wrappers that don't require any special treatment. Most new wrappers should
+# fit in this group
 miscWrappers = [
   ('void', 'empty', []),
   ('int', 'accept', [('int', 'sockfd'),
@@ -369,6 +376,7 @@ miscWrappers = [
                               ('sighandler_t', 'disp')]),
 ]
 
+# Wrappers that operate on file/dir streams.
 fstreamWrappers = [
 
   ('FILE*', 'fopen', [('const char*', 'path'),
@@ -489,7 +497,7 @@ fstreamWrappers = [
 
 ]
 
-#REACH_RECORD_REPLAY_WRAPPER_2('MACRO')]),
+# pthread_cond_* wrappers require special treatment as libc and libpthread both have different (and non-compatible) implementations.
 pthreadCondWrappers = [
   ('int', 'pthread_cond_broadcast', [('pthread_cond_t*', 'cond', '__save_retval')]),
   ('int', 'pthread_cond_signal', [('pthread_cond_t*', 'cond', '__save_retval')]),
@@ -502,7 +510,7 @@ pthreadCondWrappers = [
 ]
 
 
-#REACH_RECORD_REPLAY_WRAPPER_3('MACRO')]),
+# stat/lstat/fstat functions are MACRO wrappers around the underlying xstat/lxstat/fxstat functions. libc defines them with a leading '__'.
 xstatWrappers = [
   ('int', 'fxstat', [('int', 'vers'),
                      ('int', 'fd'),
@@ -530,7 +538,7 @@ xstatWrappers = [
 ]
 
 
-#REACH_RECORD_REPLAY_WRAPPER_4('MACRO')]),
+# printf and scanf wrappers require special treatment
 printfScanfWrappers = [
   ('int', 'vfprintf', [('FILE*', 'stream'),
                       ('const char*', 'format'),
@@ -542,8 +550,9 @@ printfScanfWrappers = [
                     ('extra', 'int bytes')),
 ]
 
+# These wrappers are used internally by fred. They do not have any
+# libc/libpthread implementation.
 nonSyscallWrappers = [
-  #REACH_RECORD_REPLAY_WRAPPER_5('MACRO')]),
   ('void', 'exec_barrier', []),
   ('void', 'signal_handler', [('int', 'sig'),
                               ('siginfo_t*', 'info'),
@@ -551,7 +560,7 @@ nonSyscallWrappers = [
   ('void', 'user', []),
 ]
 
-#REACH_NON_RECORD_REPLAY_WRAPPER('MACRO')]),
+# syscall wrappers requires special treatment.
 syscallWrapper = [
   ('long int', 'syscall', [('int', 'num'),
                            ('void*', 'a1'),
@@ -563,6 +572,8 @@ syscallWrapper = [
                            ('void*', 'a7')]),
 ]
 
+# All of our code should only use wrapperGroups. There should be no need to use
+# any wrapper group directly.
 wrapperGroups = [(miscWrappers, 'misc'),
                  (fstreamWrappers, 'fstream'),
                  (pthreadCondWrappers, 'pthreadCond'),
@@ -571,13 +582,6 @@ wrapperGroups = [(miscWrappers, 'misc'),
                  (nonSyscallWrappers, 'noSyscall'),
                  (syscallWrapper, 'syscall'),
                 ]
-
-allWrappers = miscWrappers + fstreamWrappers + pthreadCondWrappers + xstatWrappers + \
-              printfScanfWrappers + nonSyscallWrappers + syscallWrapper
-
-# argument-flag := '__save_retval' | '__no_save'
-# opt-wrapper-info := ('opt', <optional-flags>) | ('extra', <extra-fields-for-struct>)
-# optional-flags := 'decl_data_offset' | 'decl_retval'
 
 class RetType:
     """ Information about return type"""
@@ -826,9 +830,8 @@ copyrightHdr = """\
 """
 
 def gen_wrapper_util_cpp(allWrappers):
-    header = '#include "wrapper_util.h"\n'
+    header  = '#include "wrapper_util.h"\n'
     header += '#include "synchronizationlogging.h"\n\n'
-    footer = ''
 
     log_event_size_start = 'static size_t log_event_size[numTotalWrappers] = {\n'
     log_event_size_end = '\n};\n\n'
@@ -875,7 +878,6 @@ def gen_wrapper_util_cpp(allWrappers):
     fd.write(base_turn_check + '\n')
     fd.write(string.join(turn_check_p_fn, '\n'))
 
-    fd.write(footer)
     fd.close()
 
 
@@ -955,7 +957,7 @@ def gen_fred_wrappers_raw_h(allWrappers):
 def gen_syscallsreal_helper_c(allWrappers):
     header  = '#include "fred_wrappers.h"\n\n'
     header += 'void * _real_dlsym ( void *handle, const char *symbol );\n'
-    header += 'extern LIB_PRIVATE void *_real_func_addr[];\n'
+    header += 'extern LIB_PRIVATE void *_real_func_addr[];\n\n'
 
 
     libc_func_addr = []

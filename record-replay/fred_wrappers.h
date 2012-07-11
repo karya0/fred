@@ -67,7 +67,7 @@
 # define READLINK_RET_TYPE int
 #endif
 
-#include "fred_wrappers_raw.h"
+#include "autogen/fred_wrappers_raw.h"
 
 #ifdef __cplusplus
 extern "C"

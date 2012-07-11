@@ -39,7 +39,7 @@
 #include "fred_wrappers.h"
 #include "fred_interface.h"
 #include "threadinfo.h"
-#include "wrapper_util.h"
+#include "autogen/wrapper_util.h"
 #include "util.h"
 #include "jassert.h"
 

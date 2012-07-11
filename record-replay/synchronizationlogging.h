@@ -51,7 +51,7 @@
 #include "jfilesystem.h"
 #include "fred_wrappers.h"
 #include "threadinfo.h"
-#include "wrapper_util.h"
+#include "autogen/wrapper_util.h"
 
 #undef WRAPPER_EXECUTION_ENABLE_CKPT
 #undef WRAPPER_EXECUTION_DISABLE_CKPT

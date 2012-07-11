@@ -41,7 +41,7 @@
 //using namespace dmtcp;
 #include "synchronizationlogging.h"
 #include "log.h"
-#include "fred_read_log.h"
+#include "autogen/fred_read_log.h"
 
 void print_log_entry_common(int idx, log_entry_t *entry) {
   printf("%2d: clone_id=%ld, [%-20.20s]: ",
