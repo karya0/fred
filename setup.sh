@@ -17,7 +17,7 @@ fi
 if grep --quiet -- --with-record-replay $DMTCP_ROOT/config.log; then
   echo do nothing > /dev/null
 else
-  echo DMTCP was not configured with --with-record-replay;  Please remake.
+  echo DMTCP was not configured with --with-record-replay\;  Please remake.
 fi
 
 (cd test; make test-list 1>2&)
